@@ -68,7 +68,9 @@ class Hanasu {
 
   #handleConnection(socket: Socket) {
     const url =
-      socket.request.url !== undefined ? new URL(socket.request.url) : null;
+      socket.request.url !== undefined
+        ? new URL(socket.request.url, 'http://localhost:8080')
+        : null;
     const name = url?.searchParams.get('name') ?? socket.id;
 
     const user: IHanasuUser = {
