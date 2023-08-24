@@ -6,3 +6,10 @@
   height: 100vh;
   width: 100vw;
 }
+
+@layer base {
+  button,
+  [type='button'] {
+    background-color: var(--el-button-bg-color, var(--el-color-white));
+  }
+}

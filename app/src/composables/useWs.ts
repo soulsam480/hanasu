@@ -1,5 +1,6 @@
 import { Socket, io } from 'socket.io-client';
-import { reactive } from 'vue';
+import { reactive, toRefs } from 'vue';
+import { ILocalUserId } from '../store/app';
 
 export interface IUser {
   id: string;
@@ -39,47 +40,49 @@ export const wsState = reactive<ISocketState>({
   users: [],
 });
 
-export function createConnection(name: string) {
-  if (wsState.conn !== null) return;
+export function createConnection({ name, id }: ILocalUserId) {
+  const { conn, state, users } = toRefs(wsState);
 
-  wsState.state = 'connecting';
+  if (conn.value !== null) return;
 
-  wsState.conn = io('http://localhost:8080' + `?name=${name}`, {
+  state.value = 'connecting';
+
+  conn.value = io('http://localhost:8080' + `?name=${name}&id=${id}`, {
     transports: ['websocket'],
   });
 
-  wsState.conn.on('connect', () => {
-    wsState.state = 'connected';
+  conn.value.on('connect', () => {
+    state.value = 'connected';
   });
 
-  wsState.conn.on('reconnect_attempt', () => {
-    wsState.state = 'reconnecting';
+  conn.value.on('reconnect_attempt', () => {
+    state.value = 'reconnecting';
   });
 
-  wsState.conn.on('disconnect', () => {
-    wsState.state = 'disconnected';
+  conn.value.on('disconnect', () => {
+    state.value = 'disconnected';
   });
 
-  wsState.conn.on('reconnect_failed', () => {
-    wsState.state = 'disconnected';
+  conn.value.on('reconnect_failed', () => {
+    state.value = 'disconnected';
   });
 
   // data
-  wsState.conn.on(HANASU_EVENTS.CONN_SUCCESS, (users: IUser[]) => {
-    wsState.users = users;
+  conn.value.on(HANASU_EVENTS.CONN_SUCCESS, (fromAPI: IUser[]) => {
+    console.log(fromAPI);
+
+    users.value = fromAPI;
   });
 
-  wsState.conn.on(HANASU_EVENTS.USER_CONNECTED, (user) => {
-    console.log('new user', user);
+  conn.value.on(HANASU_EVENTS.USER_CONNECTED, (user) => {
+    console.log('user', user);
 
-    wsState.users.push(user);
+    users.value.push(user);
   });
 
-  wsState.conn.on(HANASU_EVENTS.USER_DISCONNECTED, (user) => {
-    wsState.users = wsState.users.filter((u) => u.id !== user.id);
+  conn.value.on(HANASU_EVENTS.USER_DISCONNECTED, (user) => {
+    users.value = users.value.filter((u) => u.id !== user.id);
   });
 
-  //   wsState.conn.on(HANASU_EVENTS.BLOCKED_USERS, (users: IUser[]) => {
-
-  return wsState.conn;
+  return conn.value;
 }

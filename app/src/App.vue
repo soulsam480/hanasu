@@ -1,56 +1,64 @@
 <script setup lang="ts">
-import { NButton, NConfigProvider, NDrawer, NDrawerContent } from 'naive-ui';
-import { ref, watchEffect } from 'vue';
+import { ElButton, ElDrawer } from 'element-plus';
+import { onMounted, ref } from 'vue';
 import InitModal from './components/InitModal.vue';
-import { wsState } from './composables/useWs';
+import UsersList from './components/UsersList.vue';
+import { createConnection, wsState } from './composables/useWs';
+import { ILocalUserId, localUserId } from './store/app';
 
-// onMounted(() => {
-//   createConnection('sambit');
-// });
+const initModalOpen = ref(false);
 
-const open = ref(false);
+function handleConnInit(userId: ILocalUserId) {
+  initModalOpen.value = false;
 
-watchEffect(() => {
-  console.log(wsState);
+  createConnection(userId);
+}
+
+onMounted(() => {
+  if (localUserId.value !== null) {
+    initModalOpen.value = false;
+    handleConnInit(localUserId.value);
+  }
 });
 </script>
 
 <template>
-  <n-config-provider abstract preflight-style-disabled>
-    <main class="main">
-      <init-modal :open="wsState.conn === null" />
+  <main class="main">
+    <init-modal
+      :open="localUserId === null || wsState.state === 'disconnected'"
+      @submit="handleConnInit"
+    />
 
-      <div
-        class="container relative border border-gray-200 rounded flex flex-col divide-y overflow-hidden"
-        id="drawer-target"
-      >
-        <!-- header -->
-        <div class="p-3">
-          <div class="bold">Hanasu</div>
+    <div
+      class="container relative border border-gray-200 rounded flex flex-col divide-y overflow-hidden"
+      id="drawer-target"
+    >
+      <!-- header -->
+      <div class="p-3">
+        <div class="bold">Hanasu</div>
 
-          <n-button class="sm:hidden" @click="open = !open">Open</n-button>
-        </div>
-
-        <!-- body -->
-        <div class="flex-grow p-3">body</div>
-
-        <!-- footer -->
-        <div class="p-3">Copy right &copy; {{ new Date().getFullYear() }}</div>
+        <el-button class="sm:hidden" @click="initModalOpen = !initModalOpen"
+          >Open</el-button
+        >
       </div>
 
-      <n-drawer
-        v-model:show="open"
-        :width="250"
-        placement="left"
-        :trap-focus="false"
-        to="#drawer-target"
-      >
-        <n-drawer-content title="Hanasu" closable>
-          Stoner is a 1965 novel by the American writer John Williams.
-        </n-drawer-content>
-      </n-drawer>
-    </main>
-  </n-config-provider>
+      <!-- body -->
+      <div class="flex-grow grid grid-cols-5 divide-x divide-gray-200">
+        <div class="col-span-2 hidden sm:block">
+          <users-list :users="wsState.users" />
+        </div>
+
+        <div class="col-span-3">Hello</div>
+      </div>
+
+      <!-- footer -->
+      <div class="p-3">Copy right &copy; {{ new Date().getFullYear() }}</div>
+    </div>
+
+    <el-drawer v-model="initModalOpen" size="250px" direction="ltr">
+      <div>Hello</div>
+    </el-drawer>
+  </main>
 </template>
 
 <style lang="scss">

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "app": "pnpm --filter @hanasu/app",
+    "api": "pnpm --filter @hanasu/api"
+  },
   "keywords": [],
   "author": "",
   "license": "MIT",
