@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ElAvatar, ElBadge, ElScrollbar } from 'element-plus';
+import { ElAvatar, ElBadge, ElButton, ElScrollbar } from 'element-plus';
+// @ts-expect-error bad types
+import PhClose from '~icons/ph/x-circle-duotone';
 import { appState } from '../store/app';
 import { IUser } from '../store/ws';
 import { dateFormat } from '../utils/date';
@@ -10,10 +12,11 @@ defineProps<{
 
 defineEmits<{
   (e: 'call-user', user: IUser): void;
+  (e: 'close-chat', event: MouseEvent): void;
 }>();
 </script>
 <template>
-  <el-scrollbar class="divide-y divide-gray-100 p-2">
+  <el-scrollbar view-class="p-2 flex flex-col gap-2">
     <div
       class="bg-gray-100 rounded hover:bg-gray-200 p-2 cursor-pointer"
       @click="$emit('call-user', user)"
@@ -46,6 +49,20 @@ defineEmits<{
             since: {{ dateFormat(new Date(user.connectedAt), 'hh:mm aaa') }}
           </div>
         </div>
+
+        <el-button
+          v-if="
+            appState.chatState === 'connected' &&
+            appState.chatUser?.id === user.id
+          "
+          size="small"
+          title="Close chat"
+          class="ml-auto"
+          @click="$emit('close-chat', $event)"
+          type="danger"
+          circle
+          :icon="PhClose"
+        />
       </el-badge>
     </div>
   </el-scrollbar>

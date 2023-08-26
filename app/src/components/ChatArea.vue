@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ElAvatar, ElButton, ElInput } from 'element-plus';
+import { ElAvatar, ElBadge, ElButton, ElInput } from 'element-plus';
 import { computed, ref, toRefs, watch } from 'vue';
 import { IMessage, appState, localUserId } from '../store/app';
+// @ts-expect-error bad types
+import PhClose from '~icons/ph/x-circle-duotone';
 
 const emit = defineEmits<{
   (e: 'send-message', message: IMessage): void;
+  (e: 'close-chat', event: MouseEvent): void;
 }>();
 
 const { messages, chatState, chatUser } = toRefs(appState);
@@ -19,7 +22,7 @@ function scrollOnMessage() {
   chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight;
 }
 
-watch(messages, scrollOnMessage, { immediate: true });
+watch(messages.value, scrollOnMessage, { flush: 'post' });
 
 const isChatDisabled = computed(
   () =>
@@ -46,7 +49,48 @@ function handleSendMessage() {
 </script>
 <template>
   <div class="relative h-full flex flex-col max-h-full">
-    <div class="p-1 flex-grow overflow-scroll">
+    <div
+      v-if="chatUser !== null"
+      class="p-2 bg-gray-200 rounded-b-md md:hidden"
+    >
+      <el-badge
+        is-dot
+        :type="
+          chatState === 'connected'
+            ? 'success'
+            : chatState === 'connecting'
+            ? 'warning'
+            : 'danger'
+        "
+        class="w-full inline-flex items-center gap-2"
+      >
+        <el-avatar
+          size="small"
+          :src="`https://source.boringavatars.com/pixel/120/${chatUser.id}?colors=264653,f4a261,e76f51`"
+        />
+
+        <div class="text-sm">
+          {{ chatUser.name }}
+        </div>
+
+        <el-button
+          v-if="chatState === 'connected'"
+          size="small"
+          title="Close chat"
+          class="ml-auto"
+          @click="$emit('close-chat', $event)"
+          type="danger"
+          circle
+          :icon="PhClose"
+        />
+      </el-badge>
+    </div>
+
+    <div
+      v-if="chatState === 'connected'"
+      class="p-1 flex-grow overflow-scroll"
+      ref="chatContainerRef"
+    >
       <div
         :key="message.timestamp"
         v-for="message in messages"
@@ -81,6 +125,22 @@ function handleSendMessage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div v-else class="h-full flex items-center justify-center">
+      <div
+        v-if="chatState === 'connecting'"
+        class="text-sm text-gray-500 inline-flex gap-2 items-center"
+      >
+        <i-ph-spiral-duotone class="animate-spin" />
+        <span>Please wait for {{ chatUser?.name }} to accept request...</span>
+      </div>
+
+      <div v-else class="text-sm text-gray-500 inline-flex gap-2">
+        <i-ph-chats-teardrop-duotone />
+
+        <span>Send a chat request to someone to start chatting!</span>
       </div>
     </div>
 

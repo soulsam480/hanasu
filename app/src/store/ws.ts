@@ -126,6 +126,13 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
 
   conn.value.on(HANASU_EVENTS.USER_DISCONNECTED, (user: IUser) => {
     if (user.id === appState.chatUser?.id) {
+      ElNotification({
+        message: h(CallNotification, {
+          message: `Disconnected from ${appState.chatUser?.name}`,
+          type: 'rejected',
+        }),
+      });
+
       resetApp();
     }
 

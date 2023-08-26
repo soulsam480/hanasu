@@ -67,6 +67,9 @@ export function usePeer() {
       }),
     });
 
+    chatState.value = 'connecting';
+    chatUser.value = user;
+
     peer.value = new Peer({
       initiator: true,
       trickle: false,
@@ -85,9 +88,6 @@ export function usePeer() {
         offer: JSON.stringify(data),
         to: user.id,
       });
-
-      chatUser.value = user;
-      chatState.value = 'connecting';
 
       ElNotification({
         message: h(CallNotification, {

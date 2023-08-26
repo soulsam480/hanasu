@@ -29,6 +29,8 @@ interface IAppState {
   incomingCall: ICallMadeParams | null;
   peer: Peer.Instance | null;
   messages: IMessage[];
+  isDrawerOpen: boolean;
+  isSettingsDrawerOpen: boolean;
 }
 
 export const appState = reactive<IAppState>({
@@ -37,6 +39,8 @@ export const appState = reactive<IAppState>({
   chatUser: null,
   incomingCall: null,
   messages: [],
+  isDrawerOpen: false,
+  isSettingsDrawerOpen: false,
 });
 
 export function resetApp() {
