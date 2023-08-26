@@ -17,11 +17,18 @@ export const localUserId = useStorage<Omit<IUser, 'connectedAt'> | null>(
 
 export type TChatState = 'connected' | 'connecting' | 'disconnected';
 
+export interface IMessage {
+  content: string;
+  owner: string;
+  timestamp: number;
+}
+
 interface IAppState {
   chatState: TChatState;
   chatUser: IUser | null;
   incomingCall: ICallMadeParams | null;
   peer: Peer.Instance | null;
+  messages: IMessage[];
 }
 
 export const appState = reactive<IAppState>({
@@ -29,6 +36,7 @@ export const appState = reactive<IAppState>({
   chatState: 'disconnected',
   chatUser: null,
   incomingCall: null,
+  messages: [],
 });
 
 export function resetApp() {
@@ -37,4 +45,5 @@ export function resetApp() {
   appState.chatState = 'disconnected';
   appState.incomingCall = null;
   appState.chatUser = null;
+  appState.messages = [];
 }

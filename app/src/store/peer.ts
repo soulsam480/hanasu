@@ -2,7 +2,7 @@ import { ElNotification } from 'element-plus';
 import Peer from 'simple-peer';
 import { h, toRefs } from 'vue';
 import CallNotification from '../components/CallNotification.vue';
-import { appState, resetApp } from './app';
+import { IMessage, appState, resetApp } from './app';
 import { HANASU_EVENTS, ICallMadeParams, IUser, wsState } from './ws';
 
 const RTC_CONFIG = {
@@ -23,12 +23,10 @@ const RTC_CONFIG = {
 };
 
 function setupCommonPeerEventListeners(peer: Peer.Instance) {
-  const { chatState, chatUser } = toRefs(appState);
+  const { chatState, chatUser, messages } = toRefs(appState);
 
   peer.on('data', (data) => {
-    console.log(data);
-
-    // messages.push(JSON.parse(new TextDecoder().decode(data)));
+    messages.value.push(JSON.parse(new TextDecoder().decode(data)));
   });
 
   peer.on('connect', () => {
@@ -169,6 +167,12 @@ export function usePeer() {
     incomingCall.value = null;
   }
 
+  function sendMessage(message: IMessage) {
+    if (peer.value?.writable !== true) return;
+
+    peer.value?.send(JSON.stringify(message));
+  }
+
   return {
     peer,
     chatUser,
@@ -176,5 +180,6 @@ export function usePeer() {
     makeCall,
     acceptCall,
     rejectCall,
+    sendMessage,
   };
 }

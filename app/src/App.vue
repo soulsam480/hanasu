@@ -2,6 +2,7 @@
 import { useWindowSize } from '@vueuse/core';
 import { ElButton, ElDrawer } from 'element-plus';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import ChatArea from './components/ChatArea.vue';
 import InitModal from './components/InitModal.vue';
 import UsersList from './components/UsersList.vue';
 import { appState, localUserId } from './store/app';
@@ -25,7 +26,7 @@ onMounted(() => {
   }
 });
 
-const { makeCall, chatState } = usePeer();
+const { makeCall, chatState, sendMessage } = usePeer();
 
 function handleUserCall(user: IUser) {
   if (chatState.value !== 'disconnected') return;
@@ -46,37 +47,44 @@ onBeforeUnmount(() => {
     />
 
     <div
-      class="md:w-4/5 lg:w-7/12 md:h-2/3 h-full w-full relative border border-gray-200 rounded flex flex-col divide-y overflow-hidden"
+      class="md:w-4/5 lg:w-7/12 md:h-2/3 h-full w-full relative border border-gray-200 rounded flex flex-col divide-y"
       id="drawer-target"
     >
       <!-- header -->
-      <div class="p-3 flex items-center gap-2">
-        <div class="bold text-lg">Hanasu</div>
+      <div class="p-3 flex items-center gap-2 justify-between">
+        <div class="bold">Hanasu</div>
+
+        <el-button
+          size="large"
+          class="md:hidden"
+          type="primary"
+          circle
+          @click="initModalOpen = !initModalOpen"
+        >
+          <i-ph-chat-teardrop-duotone />
+        </el-button>
       </div>
 
       <!-- body -->
-      <div class="flex-grow grid grid-cols-5 divide-x divide-gray-200 relative">
+      <div
+        class="h-full overflow-hidden grid grid-cols-5 divide-x divide-gray-200 relative"
+      >
         <div v-if="width > 768" class="col-span-2 hidden md:block">
           <users-list :users="wsState.users" @call-user="handleUserCall" />
         </div>
 
-        <div class="col-span-5 md:col-span-3">Hello</div>
-
-        <div class="absolute bottom-4 right-4 z-10 !border-0">
-          <el-button
-            size="large"
-            class="md:hidden"
-            type="primary"
-            circle
-            @click="initModalOpen = !initModalOpen"
-          >
-            <i-ph-chat-teardrop-duotone />
-          </el-button>
+        <div class="col-span-5 md:col-span-3 overflow-scroll">
+          <chat-area @send-message="sendMessage" />
         </div>
       </div>
 
       <!-- footer -->
-      <div class="p-3">Copy right &copy; {{ new Date().getFullYear() }}</div>
+      <div class="p-1 md:p-3 text-center text-xs text-gray-400">
+        MIT License. &copy; Sambit Sahoo {{ new Date().getFullYear() }}
+        <a class="underline" href="https://github.com/soulsam480/hanasu"
+          >source</a
+        >
+      </div>
     </div>
 
     <template v-if="width <= 768">

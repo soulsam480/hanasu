@@ -10,6 +10,7 @@ declare module 'vue' {
     IPhChatsTeardropDuotone: typeof import('~icons/ph/chats-teardrop-duotone')['default']
     IPhChatTeardropDotsDuotone: typeof import('~icons/ph/chat-teardrop-dots-duotone')['default']
     IPhChatTeardropDuotone: typeof import('~icons/ph/chat-teardrop-duotone')['default']
+    IPhPaperPlaneTiltDuotone: typeof import('~icons/ph/paper-plane-tilt-duotone')['default']
     IPhSkullDuotone: typeof import('~icons/ph/skull-duotone')['default']
   }
 }
