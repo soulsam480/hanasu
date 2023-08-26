@@ -8,13 +8,16 @@ import {
   FormRules,
 } from 'element-plus';
 import { markRaw, reactive } from 'vue';
-import { ILocalUserId, localUserId } from '../store/app';
+import { localUserId } from '../store/app';
+import { IUser } from '../store/ws';
 
 defineProps<{
   open: boolean;
 }>();
 
-const emit = defineEmits<{ (e: 'submit', localUserId: ILocalUserId): void }>();
+const emit = defineEmits<{
+  (e: 'submit', localUserId: Omit<IUser, 'connectedAt'>): void;
+}>();
 
 interface IInitFormValue {
   name: string;
@@ -35,7 +38,7 @@ const rules = markRaw<FormRules<IInitFormValue>>({
 function handleSubmit() {
   const newUser = {
     name: formValue.name,
-    id: window.crypto.randomUUID(),
+    id: window.crypto.randomUUID() as string,
   };
 
   localUserId.value = newUser;
@@ -79,12 +82,6 @@ function handleSubmit() {
           Begin
         </el-button>
       </div>
-
-      <!-- <template #footer>
-          <div class="flex justify-end">
-            <n-button attr-type="submit" size="small">Begin</n-button>
-          </div>
-        </template> -->
     </el-form>
   </el-dialog>
 </template>

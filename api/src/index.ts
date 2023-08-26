@@ -5,9 +5,10 @@ interface IHanasuUser {
   name: string;
   socketId: string;
   localId: string;
+  connectedAt: string;
 }
 
-const HANASU_EVENTS = {
+export const HANASU_EVENTS = {
   CONN_SUCCESS: 'con_suc',
   USER_CONNECTED: 'u_con',
   USER_DISCONNECTED: 'u_dis',
@@ -86,6 +87,7 @@ class Hanasu {
       socketId: socket.id,
       name,
       localId,
+      connectedAt: new Date().toISOString(),
     };
 
     if (this.clients.find((el) => el.localId === user.localId) === undefined) {
@@ -256,8 +258,12 @@ class Hanasu {
     );
   }
 
-  static stripId({ socketId: _, ...user }: IHanasuUser) {
-    return user;
+  static stripId({ name, localId, connectedAt }: IHanasuUser) {
+    return {
+      name,
+      connectedAt,
+      id: localId,
+    };
   }
 }
 
