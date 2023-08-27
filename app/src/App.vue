@@ -2,6 +2,7 @@
 import { IUser } from '@hanasu/shared';
 import { useWindowSize } from '@vueuse/core';
 import { ElButton, ElDialog, ElDrawer } from 'element-plus';
+import { v4 as uuid } from 'uuid';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import PhChat from '~icons/ph/chat-teardrop-duotone';
 import PhThreeDots from '~icons/ph/dots-three-outline-vertical-thin';
@@ -22,9 +23,23 @@ function handleConnInit(userId: Omit<IUser, 'connectedAt'>) {
 }
 
 onMounted(() => {
-  if (localUserId.value !== null) {
+  const url = new URL(window.location.href);
+  const memberName = url.searchParams.get('member_name');
+
+  let userId = localUserId.value;
+
+  if (userId === null && memberName !== null && memberName.length > 0) {
+    userId = {
+      name: memberName,
+      id: uuid(),
+    };
+
+    localUserId.value = userId;
+  }
+
+  if (userId !== null) {
     appState.isDrawerOpen = false;
-    handleConnInit(localUserId.value);
+    handleConnInit(userId);
   }
 });
 
