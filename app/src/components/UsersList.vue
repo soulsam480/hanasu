@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IUser } from '@hanasu/shared';
-import { ElAvatar, ElBadge, ElButton, ElScrollbar } from 'element-plus';
+import { ElAvatar, ElBadge, ElButton, ElScrollbar, ElTag } from 'element-plus';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { appState } from '../store/app';
 import { dateFormat } from '../utils/date';
@@ -15,12 +15,18 @@ defineEmits<{
 }>();
 </script>
 <template>
-  <div class="flex flex-col gap-2 p-2">
-    <div class="text-sm inline-flex gap-2 items-center text-gray-600">
-      <i-ph-user-circle-gear-duotone /> <span>Active users</span>
+  <div class="flex flex-col gap-1">
+    <div
+      class="px-2 py-3 text-sm inline-flex justify-between items-center text-gray-600 border-b border-gray-200"
+    >
+      <div class="inline-flex gap-2 items-center">
+        <i-ph-user-circle-gear-duotone /> <span>Active users</span>
+      </div>
+
+      <el-tag round type="info">{{ users.length }}</el-tag>
     </div>
 
-    <el-scrollbar view-class="flex flex-col gap-2" class="flex-grow">
+    <el-scrollbar view-class="flex flex-col gap-2 px-1" class="flex-grow">
       <div
         class="bg-gray-100 rounded hover:bg-gray-200 p-2 cursor-pointer"
         @click="$emit('call-user', user)"

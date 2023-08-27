@@ -118,14 +118,14 @@ function handleSendMessage() {
 
     <div
       v-if="chatState === 'connected'"
-      class="p-1 flex-grow overflow-scroll"
+      class="p-1 overflow-scroll flex flex-col gap-2 mt-auto"
       id="haansu-chat-container"
     >
       <div
         :key="message.timestamp"
         v-for="message in appState.messages"
         :class="[
-          'flex my-2',
+          'flex',
           {
             'justify-end': message.owner === localUserId?.id,
           },

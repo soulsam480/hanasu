@@ -55,7 +55,9 @@ watch(
 const friendName = ref('');
 
 const memberLink = computed(() => {
-  return `${window.location.origin}/?member_name=${friendName.value}`;
+  return `${window.location.origin}/?member_name=${window.encodeURIComponent(
+    friendName.value,
+  )}`;
 });
 
 const { copied, copy } = useClipboard({ source: memberLink });
@@ -85,18 +87,26 @@ watchEffect(() => {
     </div>
 
     <div
-      class="flex flex-col gap-1 p-2 bg-gray-100 rounded"
+      class="flex flex-col gap-2 p-2 bg-gray-100 rounded"
       v-if="localUserId !== null"
     >
-      <div class="text-sm mb-2">My Hansu ID</div>
+      <div class="text-sm mb-2 inline-flex gap-2">
+        <i-ph-identification-card-duotone />
+        <span>My Hansu ID</span>
+      </div>
+
       <div class="text-sm">{{ localUserId?.name }}</div>
       <div class="text-xs text-gray-400">
         {{ localUserId?.id }}
       </div>
     </div>
 
-    <div class="flex flex-col gap-1 p-2 bg-gray-100 rounded">
-      <div class="text-sm mb-2">Reset Hansu ID</div>
+    <div class="flex flex-col gap-2 p-2 bg-gray-100 rounded">
+      <div class="text-sm mb-2 inline-flex gap-2">
+        <i-ph-skull-duotone />
+        <span>Reset Hansu ID</span>
+      </div>
+
       <div class="text-xs text-gray-400">
         Your Hanasu ID is your name, we store it in browser after initial setup.
         if you want to change your name, you can reset it here or clearing
@@ -115,8 +125,11 @@ watchEffect(() => {
       </el-button>
     </div>
 
-    <div class="flex flex-col gap-1 p-2 bg-gray-100 rounded">
-      <div class="text-sm mb-2">Chat sounds</div>
+    <div class="flex flex-col gap-2 p-2 bg-gray-100 rounded">
+      <div class="text-sm mb-2 inline-flex gap-2">
+        <i-ph-speaker-hifi-duotone />
+        <span>Chat sounds</span>
+      </div>
 
       <div class="text-xs text-gray-400">
         Play tune when new message is reveived ?
@@ -130,7 +143,6 @@ watchEffect(() => {
       <el-select
         placeholder="Select a sound"
         v-model="appSettings.chatSoundFile"
-        class="m-2"
         size="small"
         :disabled="!appSettings.chatSounds"
       >
@@ -157,8 +169,11 @@ watchEffect(() => {
       />
     </div>
 
-    <div class="flex flex-col gap-1 p-2 bg-gray-100 rounded">
-      <div class="text-sm mb-2">Invite a friend to Hanasu</div>
+    <div class="flex flex-col gap-2 p-2 bg-gray-100 rounded">
+      <div class="text-sm mb-2 inline-flex gap-2">
+        <i-ph-share-network-duotone />
+        <span>Invite a friend to Hanasu</span>
+      </div>
 
       <div class="text-xs text-gray-400">
         You can send them a sharable link to join Hanasu.

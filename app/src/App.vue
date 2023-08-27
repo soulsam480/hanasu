@@ -5,7 +5,7 @@ import { ElButton, ElDialog, ElDrawer } from 'element-plus';
 import { v4 as uuid } from 'uuid';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import PhChat from '~icons/ph/chat-teardrop-duotone';
-import PhThreeDots from '~icons/ph/dots-three-outline-vertical-thin';
+import PhGearDuotone from '~icons/ph/gear-duotone';
 import ChatArea from './components/ChatArea.vue';
 import InitModal from './components/InitModal.vue';
 import SettingsDrawer from './components/SettingsDrawer.vue';
@@ -127,7 +127,7 @@ function handleCloseChat(e: MouseEvent) {
             @click="
               appState.isSettingsDrawerOpen = !appState.isSettingsDrawerOpen
             "
-            :icon="PhThreeDots"
+            :icon="PhGearDuotone"
           />
         </div>
       </div>
