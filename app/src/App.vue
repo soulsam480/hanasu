@@ -94,11 +94,11 @@ function handleCloseChat(e: MouseEvent) {
 </script>
 
 <template>
-  <main class="h-full w-full flex items-center justify-center">
+  <main class="h-full w-full flex md:items-center justify-center">
     <init-modal :open="localUserId === null" @submit="handleConnInit" />
 
     <div
-      class="md:w-4/5 lg:w-7/12 md:h-2/3 h-full w-full relative border border-gray-200 rounded flex flex-col divide-y"
+      class="md:w-4/5 lg:w-7/12 md:h-2/3 h-[85%] w-full relative border border-gray-200 rounded flex flex-col divide-y"
       id="drawer-target"
     >
       <!-- header -->
