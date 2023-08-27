@@ -20,8 +20,6 @@ const { play } = useSound(chatSoundFile, { volume: chatSoundVolume });
 
 function playChatSound() {
   if (appSettings.value.chatSounds) {
-    console.log('rinnong');
-
     play({ forceSoundEnabled: true });
   }
 }
@@ -55,8 +53,15 @@ const isChatDisabled = computed(
     chatUser.value === null,
 );
 
+const chatInput = ref<typeof ElInput | null>(null);
+
 function handleSendMessage() {
-  if (isChatDisabled.value || localUserId.value === null) return;
+  if (
+    isChatDisabled.value ||
+    localUserId.value === null ||
+    message.value.length === 0
+  )
+    return;
 
   const payload: IMessage = {
     content: message.value,
@@ -69,6 +74,7 @@ function handleSendMessage() {
   emit('send-message', payload);
 
   message.value = '';
+  chatInput.value?.focus();
 }
 </script>
 <template>
@@ -193,6 +199,7 @@ function handleSendMessage() {
 
     <div class="flex items-center gap-0.5 p-1 flex-shrink-0">
       <el-input
+        ref="chatInput"
         v-model="message"
         class="flex-grow hanasu-chat-input"
         :placeholder="

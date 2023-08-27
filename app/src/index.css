@@ -13,3 +13,8 @@
     background-color: var(--el-button-bg-color, var(--el-color-white));
   }
 }
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+}
