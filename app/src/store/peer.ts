@@ -90,10 +90,25 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
 
     resetApp();
   });
+
+  peer.on('error', (err) => {
+    console.error('[HANASU PEER ERROR]: ', err);
+
+    if (err instanceof Error) {
+      ElNotification({
+        message: h(CallNotification, {
+          message: err.name,
+          subMessage: err.message,
+          type: 'rejected',
+        }),
+      });
+    }
+  });
 }
 
 export function usePeer() {
-  const { chatState, chatUser, peer, incomingCall } = toRefs(appState);
+  const { chatState, chatUser, peer, incomingCall, userRole } =
+    toRefs(appState);
 
   function makeCall(user: IUser) {
     ElNotification({
@@ -105,6 +120,7 @@ export function usePeer() {
 
     chatState.value = 'connecting';
     chatUser.value = user;
+    userRole.value = 'caller';
 
     peer.value = new Peer({
       initiator: true,
@@ -157,6 +173,10 @@ export function usePeer() {
   }
 
   function acceptCall(callPayload: ICallMadeParams) {
+    chatState.value = 'connecting';
+    chatUser.value = callPayload.user;
+    userRole.value = 'callee';
+
     peer.value = new Peer({
       trickle: false,
       config: RTC_CONFIG,
@@ -177,9 +197,8 @@ export function usePeer() {
         to: callPayload.user.id,
       });
 
+      chatState.value = 'sent';
       incomingCall.value = null;
-      chatState.value = 'connecting';
-      chatUser.value = callPayload.user;
     });
 
     // peer.value?.on('stream', (stream) => {

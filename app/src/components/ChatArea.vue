@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { useSound } from '@vueuse/sound';
-import { ElAvatar, ElBadge, ElButton, ElInput } from 'element-plus';
+import {
+  ElAvatar,
+  ElBadge,
+  ElButton,
+  ElInput,
+  ElScrollbar,
+} from 'element-plus';
 import { computed, ref, watch } from 'vue';
 import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
@@ -26,19 +32,21 @@ function playChatSound() {
 
 const chatState = computed(() => appState.chatState);
 const chatUser = computed(() => appState.chatUser);
+const userRole = computed(() => appState.userRole);
 
 const message = ref('');
+const chatContainer = ref<InstanceType<typeof ElScrollbar> | null>(null);
 
 function handleMessageChange(value: IMessage[]) {
   if (value.length === 0) return;
 
   playChatSound();
 
-  const el = document.querySelector('#haansu-chat-container');
+  const scrollHeight = chatContainer.value?.wrapRef?.scrollHeight;
 
-  if (el === null) return;
+  if (chatContainer === null || scrollHeight === undefined) return;
 
-  el.scrollTop = el.scrollHeight;
+  chatContainer.value?.setScrollTop(scrollHeight);
 }
 
 watch(() => appState.messages, handleMessageChange, {
@@ -116,10 +124,11 @@ function handleSendMessage() {
       </el-badge>
     </div>
 
-    <div
+    <el-scrollbar
       v-if="chatState === 'connected'"
-      class="p-1 overflow-scroll flex flex-col gap-2 mt-auto"
-      id="haansu-chat-container"
+      class="p-1"
+      view-class="flex flex-col gap-2 mt-auto"
+      ref="chatContainer"
     >
       <div
         :key="message.timestamp"
@@ -160,7 +169,7 @@ function handleSendMessage() {
           </div>
         </div>
       </div>
-    </div>
+    </el-scrollbar>
 
     <div v-else class="h-full flex items-center justify-center">
       <div
@@ -169,17 +178,26 @@ function handleSendMessage() {
       >
         <div class="text-sm text-gray-400 inline-flex gap-2 items-center">
           <i-ph-spiral-duotone class="animate-spin" />
-          <span
+
+          <span v-if="userRole === 'caller'"
             >Please wait for
             <span class="font-semibold text-gray-500">{{
               chatUser?.name
             }}</span>
-            to accept request...</span
+            to accept request</span
+          >
+
+          <span v-else>
+            Accepted
+            <span class="font-semibold text-gray-500"
+              >{{ chatUser?.name }}'s</span
+            >
+            request. Waiting for connection</span
           >
         </div>
 
         <el-button
-          v-if="chatState === 'sent'"
+          v-if="userRole === 'caller' && chatState === 'sent'"
           class="self-center"
           size="small"
           type="danger"

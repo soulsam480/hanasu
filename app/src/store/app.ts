@@ -38,6 +38,8 @@ export const appSettings = useStorage<IAppSettings>(
 
 export type TChatState = 'connected' | 'connecting' | 'sent' | 'disconnected';
 
+export type TChatUserRole = 'caller' | 'callee';
+
 export interface IMessage {
   content: string;
   owner: string;
@@ -53,6 +55,7 @@ interface IAppState {
   messages: IMessage[];
   isDrawerOpen: boolean;
   isSettingsDrawerOpen: boolean;
+  userRole: TChatUserRole | null;
 }
 
 export const appState = reactive<IAppState>({
@@ -64,6 +67,7 @@ export const appState = reactive<IAppState>({
   isDrawerOpen: false,
   isSettingsDrawerOpen: false,
   outgoingCall: null,
+  userRole: null,
 });
 
 export function resetApp() {
@@ -73,5 +77,6 @@ export function resetApp() {
   appState.incomingCall = null;
   appState.outgoingCall = null;
   appState.chatUser = null;
+  appState.userRole = null;
   appState.messages = [];
 }
