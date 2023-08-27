@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { IUser } from '@hanasu/shared';
 import { useWindowSize } from '@vueuse/core';
 import { ElButton, ElDialog, ElDrawer } from 'element-plus';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import PhChat from '~icons/ph/chat-teardrop-duotone';
+import PhThreeDots from '~icons/ph/dots-three-outline-vertical-thin';
 import ChatArea from './components/ChatArea.vue';
 import InitModal from './components/InitModal.vue';
 import SettingsDrawer from './components/SettingsDrawer.vue';
 import UsersList from './components/UsersList.vue';
 import { appState, localUserId } from './store/app';
 import { usePeer } from './store/peer';
-import { IUser, createConnection, wsState } from './store/ws';
+import { createConnection, wsState } from './store/ws';
 
 const { width } = useWindowSize();
 
@@ -25,7 +28,15 @@ onMounted(() => {
   }
 });
 
-const { makeCall, chatState, sendMessage, chatUser, peer } = usePeer();
+const {
+  chatState,
+  chatUser,
+  peer,
+  makeCall,
+  sendMessage,
+  cancelOutgoingCall,
+  closeChat,
+} = usePeer();
 
 function handleUserCall(user: IUser) {
   if (chatState.value !== 'disconnected') {
@@ -62,7 +73,7 @@ function handleOverwriteChat() {
 function handleCloseChat(e: MouseEvent) {
   e.stopPropagation();
 
-  peer.value?.destroy();
+  closeChat();
 }
 </script>
 
@@ -88,9 +99,8 @@ function handleCloseChat(e: MouseEvent) {
             type="primary"
             circle
             @click="appState.isDrawerOpen = !appState.isDrawerOpen"
-          >
-            <i-ph-chat-teardrop-duotone class="text-xs" />
-          </el-button>
+            :icon="PhChat"
+          />
 
           <el-button
             circle
@@ -98,9 +108,8 @@ function handleCloseChat(e: MouseEvent) {
             @click="
               appState.isSettingsDrawerOpen = !appState.isSettingsDrawerOpen
             "
-          >
-            <i-ph-dots-three-outline-vertical-thin class="text-xs" />
-          </el-button>
+            :icon="PhThreeDots"
+          />
         </div>
       </div>
 
@@ -120,6 +129,7 @@ function handleCloseChat(e: MouseEvent) {
           <chat-area
             @send-message="sendMessage"
             @close-chat="handleCloseChat"
+            @cancel-call="cancelOutgoingCall"
           />
         </div>
       </div>

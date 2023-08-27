@@ -1,0 +1,9 @@
+{
+  "name": "@hanasu/shared",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "keywords": [],
+  "author": "soulsam480<soulsam480@hotmail.com>",
+  "license": "MIT"
+}

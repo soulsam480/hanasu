@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ElButton } from 'element-plus';
-// @ts-expect-error bad types
+import PhSkullDuotone from '~icons/ph/skull-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { appState, localUserId } from '../store/app';
 import { wsState } from '../store/ws';
@@ -51,11 +51,9 @@ function handleReset() {
         class="mt-2"
         title="Settings"
         @click="handleReset"
+        :icon="PhSkullDuotone"
       >
-        <div class="flex gap-2 items-center">
-          <i-ph-skull-duotone />
-          <span>Reset</span>
-        </div>
+        Reset
       </el-button>
     </div>
   </div>

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ElAvatar, ElBadge, ElButton, ElInput } from 'element-plus';
 import { computed, ref, toRefs, watch } from 'vue';
-import { IMessage, appState, localUserId } from '../store/app';
-// @ts-expect-error bad types
+import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
+import { IMessage, appState, localUserId } from '../store/app';
 
 const emit = defineEmits<{
   (e: 'send-message', message: IMessage): void;
   (e: 'close-chat', event: MouseEvent): void;
+  (e: 'cancel-call'): void;
 }>();
 
 const { messages, chatState, chatUser } = toRefs(appState);
@@ -58,7 +59,7 @@ function handleSendMessage() {
         :type="
           chatState === 'connected'
             ? 'success'
-            : chatState === 'connecting'
+            : chatState === 'connecting' || chatState === 'sent'
             ? 'warning'
             : 'danger'
         "
@@ -130,11 +131,24 @@ function handleSendMessage() {
 
     <div v-else class="h-full flex items-center justify-center">
       <div
-        v-if="chatState === 'connecting'"
-        class="text-sm text-gray-500 inline-flex gap-2 items-center"
+        v-if="chatState === 'connecting' || chatState === 'sent'"
+        class="flex flex-col gap-2"
       >
-        <i-ph-spiral-duotone class="animate-spin" />
-        <span>Please wait for {{ chatUser?.name }} to accept request...</span>
+        <div class="text-sm text-gray-500 inline-flex gap-2 items-center">
+          <i-ph-spiral-duotone class="animate-spin" />
+          <span>Please wait for {{ chatUser?.name }} to accept request...</span>
+        </div>
+
+        <el-button
+          v-if="chatState === 'sent'"
+          class="self-center"
+          size="small"
+          type="danger"
+          :icon="PhClose"
+          @click="$emit('cancel-call')"
+        >
+          Cancel
+        </el-button>
       </div>
 
       <div v-else class="text-sm text-gray-500 inline-flex gap-2">
@@ -162,9 +176,8 @@ function handleSendMessage() {
         circle
         :disabled="isChatDisabled || message.length === 0"
         @click="handleSendMessage"
-      >
-        <i-ph-paper-plane-tilt-duotone class="text-xs" />
-      </el-button>
+        :icon="PhPaperPlaneTilt"
+      />
     </div>
   </div>
 </template>

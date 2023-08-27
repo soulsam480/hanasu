@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IUser } from '@hanasu/shared';
 import {
   ElButton,
   ElDialog,
@@ -8,8 +9,8 @@ import {
   FormRules,
 } from 'element-plus';
 import { markRaw, reactive } from 'vue';
+import PhRocketLaunchDuotone from '~icons/ph/rocket-launch-duotone';
 import { localUserId } from '../store/app';
-import { IUser } from '../store/ws';
 
 defineProps<{
   open: boolean;
@@ -78,6 +79,7 @@ function handleSubmit() {
           native-type="submit"
           size="default"
           :disabled="formValue.name.length === 0"
+          :icon="PhRocketLaunchDuotone"
         >
           Begin
         </el-button>

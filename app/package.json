@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@hanasu/shared": "workspace:*",
     "@vueuse/core": "^10.3.0",
     "element-plus": "^2.3.9",
     "simple-peer": "^9.11.1",

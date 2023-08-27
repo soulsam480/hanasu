@@ -1,9 +1,15 @@
+import {
+  HANASU_EVENTS,
+  ICallMadeParams,
+  IMakeCallPayload,
+  IUser,
+} from '@hanasu/shared';
 import { ElNotification } from 'element-plus';
 import Peer from 'simple-peer';
-import { h, toRefs } from 'vue';
+import { h, nextTick, toRefs } from 'vue';
 import CallNotification from '../components/CallNotification.vue';
 import { IMessage, appState, resetApp } from './app';
-import { HANASU_EVENTS, ICallMadeParams, IUser, wsState } from './ws';
+import { wsState } from './ws';
 
 const RTC_CONFIG = {
   iceServers: [
@@ -31,6 +37,7 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
 
   peer.on('connect', () => {
     chatState.value = 'connected';
+    appState.outgoingCall = null;
 
     ElNotification({
       message: h(CallNotification, {
@@ -47,7 +54,10 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
 
     ElNotification({
       message: h(CallNotification, {
-        message: `Disconnected from ${chatUser.value?.name}`,
+        message:
+          chatUser.value?.name !== undefined
+            ? `Disconnected from ${chatUser.value.name}`
+            : 'Closed peer connection',
         type: 'rejected',
       }),
     });
@@ -62,7 +72,7 @@ export function usePeer() {
   function makeCall(user: IUser) {
     ElNotification({
       message: h(CallNotification, {
-        message: `Sending chat request to ${user.name}...`,
+        message: `Sending chat request to ${user.name}`,
         type: 'outgoing',
       }),
     });
@@ -84,10 +94,15 @@ export function usePeer() {
         return;
       }
 
-      wsState.conn?.emit(HANASU_EVENTS.MAKE_CALL, {
+      const payload: IMakeCallPayload = {
         offer: JSON.stringify(data),
         to: user.id,
-      });
+      };
+
+      wsState.conn?.emit(HANASU_EVENTS.MAKE_CALL, payload);
+
+      appState.outgoingCall = payload;
+      appState.chatState = 'sent';
 
       ElNotification({
         message: h(CallNotification, {
@@ -160,7 +175,7 @@ export function usePeer() {
   }
 
   function rejectCall(callPaylaod: ICallMadeParams) {
-    wsState.conn?.emit('make-rejection', {
+    wsState.conn?.emit(HANASU_EVENTS.REJECT_CALL, {
       to: callPaylaod.user.id,
     });
 
@@ -173,6 +188,29 @@ export function usePeer() {
     peer.value?.send(JSON.stringify(message));
   }
 
+  function cancelOutgoingCall() {
+    if (appState.outgoingCall !== null) {
+      wsState.conn?.emit(HANASU_EVENTS.CANCEL_CALL, {
+        to: appState.outgoingCall.to,
+      });
+
+      // wait for notification
+      peer.value?.destroy();
+
+      nextTick(() => {
+        resetApp();
+      });
+    }
+  }
+
+  function closeChat() {
+    wsState.conn?.emit(HANASU_EVENTS.REJECT_CALL, {
+      to: chatUser.value?.id,
+    });
+
+    peer.value?.destroy();
+  }
+
   return {
     peer,
     chatUser,
@@ -181,5 +219,7 @@ export function usePeer() {
     acceptCall,
     rejectCall,
     sendMessage,
+    cancelOutgoingCall,
+    closeChat,
   };
 }

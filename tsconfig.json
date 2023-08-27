@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["api/*", "app/*", "shared/*"],
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "api"
+    },
+    {
+      "path": "app"
+    },
+    {
+      "path": "shared"
+    }
+  ]
+}

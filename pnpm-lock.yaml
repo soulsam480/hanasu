@@ -14,6 +14,9 @@ importers:
 
   api:
     dependencies:
+      '@hanasu/shared':
+        specifier: workspace:*
+        version: link:../shared
       socket.io:
         specifier: ^4.7.2
         version: 4.7.2
@@ -27,6 +30,9 @@ importers:
 
   app:
     dependencies:
+      '@hanasu/shared':
+        specifier: workspace:^
+        version: link:../shared
       '@vueuse/core':
         specifier: ^10.3.0
         version: 10.3.0(vue@3.3.4)
@@ -94,6 +100,8 @@ importers:
       vue-tsc:
         specifier: ^1.8.5
         version: 1.8.8(typescript@5.1.6)
+
+  shared: {}
 
 packages:
 

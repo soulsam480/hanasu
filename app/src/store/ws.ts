@@ -1,56 +1,14 @@
+import {
+  HANASU_EVENTS,
+  IAnswerMadeParams,
+  ICallMadeParams,
+  IUser,
+} from '@hanasu/shared';
 import { ElNotification } from 'element-plus';
 import { Socket, io } from 'socket.io-client';
-import { h, reactive, toRefs } from 'vue';
+import { h, nextTick, reactive, toRefs } from 'vue';
 import CallNotification from '../components/CallNotification.vue';
 import { appState, resetApp } from '../store/app';
-
-export interface IUser {
-  id: string;
-  name: string;
-  connectedAt: string;
-}
-
-export interface IMakeCallParams {
-  to: string;
-  offer: string;
-}
-
-/**
- * incoming
- */
-export interface ICallMadeParams {
-  offer: string;
-  user: IUser;
-}
-
-/**
- * outgoing
- */
-export interface IAnswerMadeParams {
-  answer: string;
-  user: IUser;
-}
-
-export const HANASU_EVENTS = {
-  CONN_SUCCESS: 'con_suc',
-  USER_CONNECTED: 'u_con',
-  USER_DISCONNECTED: 'u_dis',
-
-  // call
-  MAKE_CALL: 'm_call',
-  CALL_MADE: 'c_mad',
-
-  ACCEPT_CALL: 'a_call',
-  CALL_ACCEPTED: 'c_acc',
-
-  REJECT_CALL: 'r_call',
-  CALL_REJECTED: 'c_rej',
-
-  // moderation
-  BLOCK_USER: 'b_user',
-  UNBLOCK_USER: 'u_user',
-  BLOCKED_USERS: 'b_users',
-} as const;
 
 interface ISocketState {
   conn: Socket | null;
@@ -140,6 +98,16 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   });
 
   conn.value.on(HANASU_EVENTS.CALL_MADE, (data: ICallMadeParams) => {
+    // handle user busy state
+    // at one point, we can only have one call
+    if (appState.incomingCall !== null || appState.chatState === 'connected') {
+      wsState.conn?.emit(HANASU_EVENTS.BUSY, {
+        to: data.user.id,
+      });
+
+      return;
+    }
+
     appState.incomingCall = data;
 
     ElNotification({
@@ -159,9 +127,44 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   });
 
   conn.value.on(HANASU_EVENTS.CALL_REJECTED, (user: IUser) => {
+    // handle chat close in same rejected event
+    if (appState.chatState === 'connected' && appState.chatUser !== null) {
+      appState.peer?.destroy();
+
+      nextTick(() => {
+        resetApp();
+      });
+
+      return;
+    }
+
     ElNotification({
       message: h(CallNotification, {
         message: `${user.name} rejected your request`,
+        type: 'rejected',
+      }),
+    });
+
+    resetApp();
+  });
+
+  conn.value.on(HANASU_EVENTS.CALL_CANCELED, (user: IUser) => {
+    ElNotification.closeAll();
+
+    ElNotification({
+      message: h(CallNotification, {
+        message: `${user.name} canceled the request`,
+        type: 'cancelled',
+      }),
+    });
+
+    resetApp();
+  });
+
+  conn.value.on(HANASU_EVENTS.BUSY, (user: IUser) => {
+    ElNotification({
+      message: h(CallNotification, {
+        message: `${user.name} is busy`,
         type: 'rejected',
       }),
     });

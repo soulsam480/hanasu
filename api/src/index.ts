@@ -1,3 +1,11 @@
+import {
+  HANASU_EVENTS,
+  IBlockUserPayload,
+  ICallCanceledPayload,
+  ICallRejectedPayload,
+  IIncomingCallPayload,
+  IMakeCallPayload,
+} from '@hanasu/shared';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
@@ -6,45 +14,6 @@ interface IHanasuUser {
   socketId: string;
   localId: string;
   connectedAt: string;
-}
-
-export const HANASU_EVENTS = {
-  CONN_SUCCESS: 'con_suc',
-  USER_CONNECTED: 'u_con',
-  USER_DISCONNECTED: 'u_dis',
-
-  // call
-  MAKE_CALL: 'm_call',
-  CALL_MADE: 'c_mad',
-
-  ACCEPT_CALL: 'a_call',
-  CALL_ACCEPTED: 'c_acc',
-
-  REJECT_CALL: 'r_call',
-  CALL_REJECTED: 'c_rej',
-
-  // moderation
-  BLOCK_USER: 'b_user',
-  UNBLOCK_USER: 'u_user',
-  BLOCKED_USERS: 'b_users',
-} as const;
-
-interface IMakeCallPayload {
-  to: string;
-  offer: any;
-}
-
-interface IIncomingCallPayload {
-  to: string;
-  answer: any;
-}
-
-interface ICallRejectedPayload {
-  to: string;
-}
-
-interface IBlockUserPayload {
-  id: string;
 }
 
 class Hanasu {
@@ -115,6 +84,13 @@ class Hanasu {
       this.#handleRejection.bind(this, socket),
     );
 
+    socket.on(
+      HANASU_EVENTS.CANCEL_CALL,
+      this.#handleCancellation.bind(this, socket),
+    );
+
+    socket.on(HANASU_EVENTS.BUSY, this.#handleBusy.bind(this, socket));
+
     socket.on('disconnect', this.#handleDisconnection.bind(this, socket));
 
     // moderation
@@ -176,9 +152,31 @@ class Hanasu {
 
     if (currentUser === undefined || to === undefined) return;
 
-    socket.to(to.socketId).emit(HANASU_EVENTS.CALL_REJECTED, {
-      user: Hanasu.stripId(currentUser),
-    });
+    socket
+      .to(to.socketId)
+      .emit(HANASU_EVENTS.CALL_REJECTED, Hanasu.stripId(currentUser));
+  }
+
+  #handleCancellation(socket: Socket, data: ICallCanceledPayload) {
+    const currentUser = this.#currentClient(socket);
+    const to = this.#getClientWithLocalId(data.to);
+
+    if (currentUser === undefined || to === undefined) return;
+
+    socket
+      .to(to.socketId)
+      .emit(HANASU_EVENTS.CALL_CANCELED, Hanasu.stripId(currentUser));
+  }
+
+  #handleBusy(socket: Socket, data: ICallCanceledPayload) {
+    const currentUser = this.#currentClient(socket);
+    const to = this.#getClientWithLocalId(data.to);
+
+    if (currentUser === undefined || to === undefined) return;
+
+    socket
+      .to(to.socketId)
+      .emit(HANASU_EVENTS.BUSY, Hanasu.stripId(currentUser));
   }
 
   #isBlocked(lcoalId: string, id: string) {

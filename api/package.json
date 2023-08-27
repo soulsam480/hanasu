@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "socket.io": "^4.7.2",
-    "tsx": "^3.12.7"
+    "tsx": "^3.12.7",
+    "@hanasu/shared": "workspace:*"
   }
 }

@@ -1,7 +1,7 @@
+import { ICallMadeParams, IMakeCallPayload, IUser } from '@hanasu/shared';
 import { useStorage } from '@vueuse/core';
 import type Peer from 'simple-peer';
 import { reactive } from 'vue';
-import { ICallMadeParams, IUser } from './ws';
 
 export const localUserId = useStorage<Omit<IUser, 'connectedAt'> | null>(
   'hanasu_user_id',
@@ -9,13 +9,13 @@ export const localUserId = useStorage<Omit<IUser, 'connectedAt'> | null>(
   localStorage,
   {
     serializer: {
-      read: (v) => JSON.parse(v),
-      write: (v) => JSON.stringify(v),
+      read: (v) => window.JSON.parse(window.atob(v)),
+      write: (v) => window.btoa(window.JSON.stringify(v)),
     },
   },
 );
 
-export type TChatState = 'connected' | 'connecting' | 'disconnected';
+export type TChatState = 'connected' | 'connecting' | 'sent' | 'disconnected';
 
 export interface IMessage {
   content: string;
@@ -27,6 +27,7 @@ interface IAppState {
   chatState: TChatState;
   chatUser: IUser | null;
   incomingCall: ICallMadeParams | null;
+  outgoingCall: IMakeCallPayload | null;
   peer: Peer.Instance | null;
   messages: IMessage[];
   isDrawerOpen: boolean;
@@ -41,6 +42,7 @@ export const appState = reactive<IAppState>({
   messages: [],
   isDrawerOpen: false,
   isSettingsDrawerOpen: false,
+  outgoingCall: null,
 });
 
 export function resetApp() {
@@ -48,6 +50,7 @@ export function resetApp() {
   appState.peer = null;
   appState.chatState = 'disconnected';
   appState.incomingCall = null;
+  appState.outgoingCall = null;
   appState.chatUser = null;
   appState.messages = [];
 }
