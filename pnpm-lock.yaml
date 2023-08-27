@@ -20,7 +20,7 @@ importers:
   api:
     dependencies:
       '@hanasu/shared':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../shared
       socket.io:
         specifier: ^4.7.2
