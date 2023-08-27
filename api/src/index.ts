@@ -1,10 +1,10 @@
 import {
-  HANASU_EVENTS,
-  IBlockUserPayload,
-  ICallCanceledPayload,
-  ICallRejectedPayload,
-  IIncomingCallPayload,
-  IMakeCallPayload,
+HANASU_EVENTS,
+IBlockUserPayload,
+ICallCanceledPayload,
+ICallRejectedPayload,
+IIncomingCallPayload,
+IMakeCallPayload,
 } from '@hanasu/shared';
 import { Server as HTTPServer, createServer } from 'http';
 import { Server, Socket } from 'socket.io';
@@ -277,12 +277,10 @@ class Hanasu {
 
 process.on('uncaughtException', (e) => {
   console.log(e);
-  process.exit(1);
 });
 
 process.on('unhandledRejection', (e) => {
   console.log(e);
-  process.exit(1);
 });
 
 const hanasu = new Hanasu();

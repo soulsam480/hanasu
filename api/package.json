@@ -11,12 +11,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^20.5.1",
-    "tsx": "^3.12.7"
-  },
+  "devDependencies": {},
   "dependencies": {
     "socket.io": "^4.7.2",
+    "@types/node": "^20.5.1",
+    "tsx": "^3.12.7",
     "@hanasu/shared": "workspace:*"
   }
 }
