@@ -3,15 +3,36 @@ import { useStorage } from '@vueuse/core';
 import type Peer from 'simple-peer';
 import { reactive } from 'vue';
 
+const SERIALIZER = {
+  read: (v: string) => window.JSON.parse(window.atob(v)),
+  write: (v: any) => window.btoa(window.JSON.stringify(v)),
+};
+
 export const localUserId = useStorage<Omit<IUser, 'connectedAt'> | null>(
   'hanasu_user_id',
   null,
   localStorage,
   {
-    serializer: {
-      read: (v) => window.JSON.parse(window.atob(v)),
-      write: (v) => window.btoa(window.JSON.stringify(v)),
-    },
+    serializer: SERIALIZER,
+  },
+);
+
+export interface IAppSettings {
+  chatSounds: boolean;
+  chatSoundFile: string;
+  chatSoundVolume: number;
+}
+
+export const appSettings = useStorage<IAppSettings>(
+  'hanasu_app_settings',
+  {
+    chatSounds: true,
+    chatSoundFile: '/chat-sound-2.mp3',
+    chatSoundVolume: 0.5,
+  },
+  localStorage,
+  {
+    serializer: SERIALIZER,
   },
 );
 

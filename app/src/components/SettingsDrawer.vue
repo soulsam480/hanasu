@@ -1,16 +1,32 @@
 <script setup lang="ts">
-import { ElButton } from 'element-plus';
+import { ElButton, ElOption, ElSelect, ElSlider, ElSwitch } from 'element-plus';
 import PhSkullDuotone from '~icons/ph/skull-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
-import { appState, localUserId } from '../store/app';
+import { appSettings, appState, localUserId } from '../store/app';
 import { wsState } from '../store/ws';
 
 function handleReset() {
   localUserId.value = null;
   appState.isSettingsDrawerOpen = false;
 
+  appState.peer?.destroy();
   wsState.conn?.close();
 }
+
+const CHAT_SOUNDS = [
+  {
+    label: 'Sudden',
+    value: '/chat-sound-1.mp3',
+  },
+  {
+    label: 'Apple',
+    value: '/chat-sound-2.mp3',
+  },
+  {
+    label: 'Android charge',
+    value: '/chat-sound-3.mp3',
+  },
+];
 </script>
 <template>
   <div class="flex flex-col gap-2">
@@ -30,7 +46,7 @@ function handleReset() {
       class="flex flex-col gap-1 p-2 bg-gray-100 rounded"
       v-if="localUserId !== null"
     >
-      <div class="text-sm">My Hansu ID</div>
+      <div class="text-sm mb-2">My Hansu ID</div>
       <div class="text-sm">{{ localUserId?.name }}</div>
       <div class="text-xs text-gray-400">
         {{ localUserId?.id }}
@@ -38,7 +54,7 @@ function handleReset() {
     </div>
 
     <div class="flex flex-col gap-1 p-2 bg-gray-100 rounded">
-      <div class="text-sm">Reset Hansu ID</div>
+      <div class="text-sm mb-2">Reset Hansu ID</div>
       <div class="text-xs text-gray-400">
         Your Hanasu ID is your name, we store it in browser after initial setup.
         if you want to change your name, you can reset it here or clearing
@@ -55,6 +71,46 @@ function handleReset() {
       >
         Reset
       </el-button>
+    </div>
+
+    <div class="flex flex-col gap-1 p-2 bg-gray-100 rounded">
+      <div class="text-sm mb-2">Chat sounds</div>
+
+      <div class="text-xs text-gray-400">
+        Play tune when new message is reveived ?
+      </div>
+
+      <div>
+        <el-switch size="small" v-model="appSettings.chatSounds" />
+      </div>
+
+      <div class="text-xs text-gray-400">Choose a tune to play</div>
+      <el-select
+        placeholder="Select a sound"
+        v-model="appSettings.chatSoundFile"
+        class="m-2"
+        size="small"
+        :disabled="!appSettings.chatSounds"
+      >
+        <el-option
+          v-for="item in CHAT_SOUNDS"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+
+      <div class="text-xs text-gray-400">
+        Volume ({{ appSettings.chatSoundVolume }})
+      </div>
+      <el-slider
+        size="small"
+        v-model="appSettings.chatSoundVolume"
+        :step="0.1"
+        :min="0.1"
+        :max="1"
+        show-stops
+      />
     </div>
   </div>
 </template>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useSound } from '@vueuse/sound';
 import { ElAvatar, ElBadge, ElButton, ElInput } from 'element-plus';
-import { computed, ref, toRefs, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
-import { IMessage, appState, localUserId } from '../store/app';
+import { IMessage, appSettings, appState, localUserId } from '../store/app';
+import { dateFormat } from '../utils/date';
 
 const emit = defineEmits<{
   (e: 'send-message', message: IMessage): void;
@@ -11,19 +13,40 @@ const emit = defineEmits<{
   (e: 'cancel-call'): void;
 }>();
 
-const { messages, chatState, chatUser } = toRefs(appState);
+const chatSoundFile = computed(() => appSettings.value.chatSoundFile);
+const chatSoundVolume = computed(() => appSettings.value.chatSoundVolume);
+
+const { play } = useSound(chatSoundFile, { volume: chatSoundVolume });
+
+function playChatSound() {
+  if (appSettings.value.chatSounds) {
+    console.log('rinnong');
+
+    play({ forceSoundEnabled: true });
+  }
+}
+
+const chatState = computed(() => appState.chatState);
+const chatUser = computed(() => appState.chatUser);
 
 const message = ref('');
 
-const chatContainerRef = ref<HTMLDivElement | null>(null);
+function handleMessageChange(value: IMessage[]) {
+  if (value.length === 0) return;
 
-function scrollOnMessage() {
-  if (chatContainerRef.value === null) return;
+  playChatSound();
 
-  chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight;
+  const el = document.querySelector('#haansu-chat-container');
+
+  if (el === null) return;
+
+  el.scrollTop = el.scrollHeight;
 }
 
-watch(messages.value, scrollOnMessage, { flush: 'post' });
+watch(() => appState.messages, handleMessageChange, {
+  flush: 'post',
+  deep: true,
+});
 
 const isChatDisabled = computed(
   () =>
@@ -41,7 +64,7 @@ function handleSendMessage() {
     timestamp: Date.now(),
   };
 
-  messages.value.push(payload);
+  appState.messages.push(payload);
 
   emit('send-message', payload);
 
@@ -90,11 +113,11 @@ function handleSendMessage() {
     <div
       v-if="chatState === 'connected'"
       class="p-1 flex-grow overflow-scroll"
-      ref="chatContainerRef"
+      id="haansu-chat-container"
     >
       <div
         :key="message.timestamp"
-        v-for="message in messages"
+        v-for="message in appState.messages"
         :class="[
           'flex my-2',
           {
@@ -124,6 +147,10 @@ function handleSendMessage() {
             <div class="text-sm">
               {{ message.content }}
             </div>
+
+            <div class="text-[10px] text-gray-400">
+              {{ dateFormat(new Date(message.timestamp), 'hh:mm aaa') }}
+            </div>
           </div>
         </div>
       </div>
@@ -134,9 +161,15 @@ function handleSendMessage() {
         v-if="chatState === 'connecting' || chatState === 'sent'"
         class="flex flex-col gap-2"
       >
-        <div class="text-sm text-gray-500 inline-flex gap-2 items-center">
+        <div class="text-sm text-gray-400 inline-flex gap-2 items-center">
           <i-ph-spiral-duotone class="animate-spin" />
-          <span>Please wait for {{ chatUser?.name }} to accept request...</span>
+          <span
+            >Please wait for
+            <span class="font-semibold text-gray-500">{{
+              chatUser?.name
+            }}</span>
+            to accept request...</span
+          >
         </div>
 
         <el-button

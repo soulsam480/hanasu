@@ -26,6 +26,7 @@ export default defineConfig({
     splitVendorChunkPlugin(),
   ],
   optimizeDeps: {
+    exclude: ['vue-demi'],
     esbuildOptions: {
       define: {
         global: 'globalThis',

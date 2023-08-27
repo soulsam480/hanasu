@@ -8,6 +8,7 @@ import {
   ElInput,
   FormRules,
 } from 'element-plus';
+import { v4 as uuid } from 'uuid';
 import { markRaw, reactive } from 'vue';
 import PhRocketLaunchDuotone from '~icons/ph/rocket-launch-duotone';
 import { localUserId } from '../store/app';
@@ -39,7 +40,7 @@ const rules = markRaw<FormRules<IInitFormValue>>({
 function handleSubmit() {
   const newUser = {
     name: formValue.name,
-    id: window.crypto.randomUUID() as string,
+    id: uuid(),
   };
 
   localUserId.value = newUser;

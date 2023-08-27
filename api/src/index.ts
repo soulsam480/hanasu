@@ -6,7 +6,7 @@ import {
   IIncomingCallPayload,
   IMakeCallPayload,
 } from '@hanasu/shared';
-import { createServer } from 'http';
+import { Server as HTTPServer, createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
 interface IHanasuUser {
@@ -17,18 +17,28 @@ interface IHanasuUser {
 }
 
 class Hanasu {
+  private httpServer: HTTPServer;
   private wss: Server;
   private clients: IHanasuUser[] = [];
   private blockedClients: Map<string, IHanasuUser[]> = new Map();
 
   constructor() {
-    const httpServer = createServer();
+    this.httpServer = createServer();
 
-    this.wss = new Server(httpServer);
+    this.wss = new Server(this.httpServer, {
+      cors: {
+        origin:
+          process.env.NODE_ENV === 'production'
+            ? ['https://rtc.sambitsahoo.com']
+            : ['http://localhost:5173', 'http://192.168.0.103:5173'],
+      },
+    });
 
     this.wss.on('connection', this.#handleConnection.bind(this));
+  }
 
-    httpServer.listen(process.env.PORT ?? 8080, () => {
+  init() {
+    this.httpServer.listen(process.env.PORT ?? 8080, () => {
       console.log(`Server started on port ${process.env.PORT ?? 8080}`);
     });
   }
@@ -275,4 +285,6 @@ process.on('unhandledRejection', (e) => {
   process.exit(1);
 });
 
-new Hanasu();
+const hanasu = new Hanasu();
+
+hanasu.init();

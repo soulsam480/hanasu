@@ -53,6 +53,7 @@ function handleUserCall(user: IUser) {
 
 onBeforeUnmount(() => {
   appState.peer?.destroy();
+  wsState.conn?.close();
 });
 
 const isOverwritingWithUser = ref<IUser | null>(null);
@@ -79,10 +80,7 @@ function handleCloseChat(e: MouseEvent) {
 
 <template>
   <main class="h-full w-full flex items-center justify-center">
-    <init-modal
-      :open="localUserId === null || wsState.state === 'disconnected'"
-      @submit="handleConnInit"
-    />
+    <init-modal :open="localUserId === null" @submit="handleConnInit" />
 
     <div
       class="md:w-4/5 lg:w-7/12 md:h-2/3 h-full w-full relative border border-gray-200 rounded flex flex-col divide-y"
@@ -90,7 +88,12 @@ function handleCloseChat(e: MouseEvent) {
     >
       <!-- header -->
       <div class="p-3 flex items-center gap-2 justify-between">
-        <div class="bold text-base">Hanasu</div>
+        <div class="inline-flex gap-1 items-center">
+          <span class="p-1 rounded-full border border-gray-200">
+            <i-ph-microphone-stage-duotone class="text-xs text-gray-500" />
+          </span>
+          <div class="bold text-base">Hanasu</div>
+        </div>
 
         <div class="inline-flex gap-2 items-center">
           <el-button
@@ -105,6 +108,7 @@ function handleCloseChat(e: MouseEvent) {
           <el-button
             circle
             plain
+            type="primary"
             @click="
               appState.isSettingsDrawerOpen = !appState.isSettingsDrawerOpen
             "
@@ -135,7 +139,9 @@ function handleCloseChat(e: MouseEvent) {
       </div>
 
       <!-- footer -->
-      <div class="p-1 md:p-3 text-center text-xs text-gray-400">
+      <div
+        class="p-1 md:p-3 text-xs text-gray-400 inline-flex items-center justify-center gap-2"
+      >
         MIT License. &copy; Sambit Sahoo {{ new Date().getFullYear() }}
         <a class="underline" href="https://github.com/soulsam480/hanasu"
           >source</a

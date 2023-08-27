@@ -12,5 +12,10 @@
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.0.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@vueuse/sound@2.0.1": "patches/@vueuse__sound@2.0.1.patch"
+    }
   }
 }

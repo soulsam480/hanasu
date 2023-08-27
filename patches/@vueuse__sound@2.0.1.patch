@@ -1,0 +1,20 @@
+diff --git a/package.json b/package.json
+index d4a3016d39b653e283a092504603c8ca745b2fe6..70968b96d0aefbde543399685a9b09b9467a5c30 100644
+--- a/package.json
++++ b/package.json
+@@ -25,11 +25,13 @@
+   "exports": {
+     ".": {
+       "require": "./dist/index.cjs",
+-      "import": "./dist/index.mjs"
++      "import": "./dist/index.mjs",
++      "types": "./dist/index.d.ts"
+     },
+     "./nuxt": {
+       "require": "./dist/nuxt.cjs",
+-      "import": "./dist/nuxt.mjs"
++      "import": "./dist/nuxt.mjs",
++      "types": "./dist/index.d.ts"
+     }
+   },
+   "main": "dist/index.mjs",

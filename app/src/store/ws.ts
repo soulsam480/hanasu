@@ -33,7 +33,10 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
     message: 'Connecting to server...',
   });
 
-  conn.value = io('http://localhost:8080' + `?name=${name}&id=${id}`, {
+  const SERVER_URL =
+    import.meta.env.VITE_PUBLIC_API_URL ?? 'http://localhost:8080';
+
+  conn.value = io(SERVER_URL + `?name=${name}&id=${id}`, {
     transports: ['websocket'],
   });
 
@@ -59,7 +62,8 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
     resetApp();
 
     ElNotification.error({
-      message: 'Server connection lost',
+      message:
+        'Server connection lost. refresh the page or retry after some time.',
     });
   });
 
@@ -69,7 +73,8 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
     resetApp();
 
     ElNotification.error({
-      message: 'Server connection lost',
+      message:
+        'Server connection lost. refresh the page or retry after some time.',
     });
   });
 
@@ -114,7 +119,7 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
       title: 'Chat request',
       message: h(CallNotification, {
         type: 'incoming',
-        message: `${data.user.name} requesting to chat`,
+        message: `${data.user.name} is requesting to chat`,
         subMessage: data.user.id,
       }),
       duration: 0,
