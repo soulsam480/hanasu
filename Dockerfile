@@ -7,8 +7,17 @@ WORKDIR /app
 COPY . .
 
 FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @hanasu/api
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prod
+
+FROM base AS build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --dev
+RUN pnpm run api build
+
+FROM base
+COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=prod-deps /app/api/node_modules /app/api/node_modules
+COPY --from=build /app/api/dist /app/api/dist
 
 EXPOSE 8080
 
-CMD [ "pnpm", "run", "api", "start" ]
+CMD [ "node", "api/dist/index.js"]

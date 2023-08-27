@@ -1,10 +1,10 @@
 import {
-HANASU_EVENTS,
-IBlockUserPayload,
-ICallCanceledPayload,
-ICallRejectedPayload,
-IIncomingCallPayload,
-IMakeCallPayload,
+  HANASU_EVENTS,
+  IBlockUserPayload,
+  ICallCanceledPayload,
+  ICallRejectedPayload,
+  IIncomingCallPayload,
+  IMakeCallPayload,
 } from '@hanasu/shared';
 import { Server as HTTPServer, createServer } from 'http';
 import { Server, Socket } from 'socket.io';
@@ -29,7 +29,7 @@ class Hanasu {
       cors: {
         origin:
           process.env.NODE_ENV === 'production'
-            ? ['https://rtc.sambitsahoo.com']
+            ? ['https://hanasu.sambitsahoo.com', 'https://rtc.sambitsahoo.com']
             : ['http://localhost:5173', 'http://192.168.0.103:5173'],
       },
     });
