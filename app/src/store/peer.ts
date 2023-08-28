@@ -125,6 +125,14 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
     console.error('[HANASU PEER ERROR]: ', err);
 
     if (err instanceof Error) {
+      let message = err.message;
+
+      if (/Connection\s+failed/.test(message)) {
+        message =
+          message +
+          'Make sure either you or the other person is not behind a firewall or a VPN.';
+      }
+
       ElNotification({
         message: h(CallNotification, {
           message: err.name,
