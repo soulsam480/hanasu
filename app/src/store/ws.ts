@@ -103,9 +103,20 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   });
 
   conn.value.on(HANASU_EVENTS.CALL_MADE, (data: ICallMadeParams) => {
+    const { incomingCall, outgoingCall, chatState } = appState;
+
     // handle user busy state
     // at one point, we can only have one call
-    if (appState.incomingCall !== null || appState.chatState === 'connected') {
+
+    // if the incoming call is from the same user as outgoing call
+    // then we need to reject the incoming call
+    if (
+      (incomingCall !== null &&
+        outgoingCall !== null &&
+        incomingCall.user.id === outgoingCall.to) ||
+      incomingCall !== null ||
+      chatState === 'connected'
+    ) {
       wsState.conn?.emit(HANASU_EVENTS.BUSY, {
         to: data.user.id,
       });

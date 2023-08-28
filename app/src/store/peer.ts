@@ -7,6 +7,7 @@ import {
 import { ElNotification } from 'element-plus';
 import Peer from 'simple-peer';
 import { h, nextTick, toRefs } from 'vue';
+import PhSkull from '~icons/ph/skull-duotone';
 import CallNotification from '../components/CallNotification.vue';
 import { IMessage, appState, resetApp } from './app';
 import { wsState } from './ws';
@@ -108,26 +109,38 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
     // (stream.value as MediaStream).getAudioTracks()[0].enabled = false;
     // isMuted.value = true;
 
-    ElNotification({
-      message: h(CallNotification, {
-        message:
-          chatUser.value?.name !== undefined
-            ? `Disconnected from ${chatUser.value.name}`
-            : 'Closed peer connection',
-        type: 'rejected',
-      }),
-    });
+    nextTick(() => {
+      ElNotification({
+        message: h(CallNotification, {
+          message:
+            chatUser.value?.name !== undefined
+              ? `Disconnected from ${chatUser.value.name}`
+              : 'Closed peer connection',
+          type: 'rejected',
+        }),
+      });
 
-    resetApp();
+      resetApp();
+    });
   });
 
   peer.on('error', (err) => {
     console.error('[HANASU PEER ERROR]: ', err);
 
     if (err instanceof Error) {
+      const code = (err as any).code;
       let message = err.message;
 
-      if (/Connection\s+failed/.test(message)) {
+      if (code === 'ERR_DATA_CHANNEL') {
+        ElNotification.warning({
+          message: 'Some error occured while sending message',
+          icon: PhSkull,
+        });
+
+        return;
+      }
+
+      if (code === 'ERR_CONNECTION_FAILURE') {
         message =
           message +
           'Make sure either you or the other person is not behind a firewall or a VPN.';

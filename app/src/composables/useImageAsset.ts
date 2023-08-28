@@ -4,7 +4,7 @@ import { ElNotification } from 'element-plus';
 import { computed, ref } from 'vue';
 import PhSkull from '~icons/ph/skull-duotone';
 
-const MAX_FILE_SELECT_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SELECT_SIZE = 3 * 1024 * 1024; // 1MB
 
 export function useImageAsset() {
   const {
@@ -34,7 +34,7 @@ export function useImageAsset() {
 
       ElNotification.error({
         icon: PhSkull,
-        message: 'Image size should be less that 5 MB',
+        message: 'Image size should be less that 3 MB',
       });
 
       return;
@@ -44,8 +44,24 @@ export function useImageAsset() {
 
     const compressedFile = await imageCompression(file, {
       useWebWorker: true,
+      // 16 KB
       maxSizeMB: 0.065535,
+      fileType: 'image/jpeg',
     });
+
+    // check for file size after compression too
+    // in modern browsers, around 256 KB in total is the size limit
+    if (compressedFile.size > 192421) {
+      resetFileState();
+
+      ElNotification.error({
+        icon: PhSkull,
+        message:
+          'Image is too large even after compression, please choose smaller image!',
+      });
+
+      return;
+    }
 
     imageFile.value = compressedFile;
 

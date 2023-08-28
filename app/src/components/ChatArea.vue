@@ -10,6 +10,7 @@ import {
 } from 'element-plus';
 import { computed, ref, watch } from 'vue';
 import PhImageSquareDuotone from '~icons/ph/image-square-duotone';
+import PhLinkSimpleDuotone from '~icons/ph/link-simple-duotone';
 import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { useImageAsset } from '../composables/useImageAsset';
@@ -33,8 +34,14 @@ function playChatSound() {
   }
 }
 
-const { open, imageAsFileURL, reset, imageFile, toBase64Image, isLoading } =
-  useImageAsset();
+const {
+  open,
+  imageAsFileURL,
+  reset,
+  imageFile,
+  toBase64Image,
+  isLoading: isProcessingImage,
+} = useImageAsset();
 
 const chatState = computed(() => appState.chatState);
 const chatUser = computed(() => appState.chatUser);
@@ -143,17 +150,40 @@ function handleAssetClick() {
 
     <div
       v-if="chatState === 'connected'"
-      class="p-1 overflow-scroll flex flex-col gap-2 mt-auto"
+      :class="[
+        'p-1 overflow-scroll flex flex-col gap-2',
+        appState.messages.length !== 0 ? 'mt-auto' : 'h-full',
+      ]"
       id="hanasu-chat-messages"
     >
-      <chat-message
-        :key="message.timestamp"
-        v-for="message in appState.messages"
-        :message="message"
-        :is-owner="message.owner === localUserId?.id"
-        :chat-user-name="chatUser?.name ?? ''"
-        v-memo="[message.timestamp, message.owner === localUserId?.id]"
-      />
+      <template v-if="appState.messages.length !== 0">
+        <chat-message
+          :key="message.timestamp"
+          v-for="message in appState.messages"
+          :message="message"
+          :is-owner="message.owner === localUserId?.id"
+          :chat-user-name="chatUser?.name ?? ''"
+          v-memo="[message.timestamp, message.owner === localUserId?.id]"
+        />
+      </template>
+
+      <div v-else class="h-full flex flex-col justify-center mx-auto gap-2">
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <span>You can only talk to one </span>
+          <i-ph-user-circle-gear-duotone />
+          <span> person at a time</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <span>Click on the image </span> <PhImageSquareDuotone />
+          <span> button to send an image</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <span>Links </span> <ph-link-simple-duotone />
+          <span> are auto anchored</span>
+        </div>
+      </div>
     </div>
 
     <div v-else class="h-full flex items-center justify-center">
@@ -244,7 +274,7 @@ function handleAssetClick() {
               size="small"
               @click="handleSendMessage"
               :icon="PhPaperPlaneTilt"
-              :loading="isLoading"
+              :loading="isProcessingImage"
               >Send</el-button
             >
           </div>
@@ -258,7 +288,7 @@ function handleAssetClick() {
             plain
             circle
             :disabled="isChatDisabled || imageAsFileURL !== null"
-            :loading="isLoading"
+            :loading="isProcessingImage"
           />
         </template>
       </el-popover>

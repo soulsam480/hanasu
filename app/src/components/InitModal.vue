@@ -71,6 +71,7 @@ function handleSubmit() {
           v-model="formValue.name"
           autocomplete="off"
           size="default"
+          autofocus
         />
       </el-form-item>
 

@@ -64,7 +64,7 @@ function handleRejectCall() {
       <span>{{ message }}</span>
     </div>
 
-    <div v-if="subMessage !== undefined" class="text-[8px] text-gray-400">
+    <div v-if="subMessage !== undefined" class="text-xs text-gray-400">
       {{ subMessage }}
     </div>
 

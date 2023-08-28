@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ElAvatar, ElImage } from 'element-plus';
+import { ElAvatar, ElImage, ElLink } from 'element-plus';
+import { Text, VNode, defineComponent, h } from 'vue';
 import { IMessage } from '../store/app';
 import { dateFormat } from '../utils/date';
 
 const BASE64_REGEX =
   /data:image\/[bmp,gif,ico,jpg,png,svg,webp,x\-icon,svg+xml]+;base64,[a-zA-Z0-9,+,/]+={0,2}/gm;
+
+const URL_REGEX =
+  /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
 
 const props = defineProps<{
   message: IMessage;
@@ -17,6 +21,70 @@ function isBase64UrlImage(base64String: string) {
 }
 
 const isImage = isBase64UrlImage(props.message.content);
+
+function wrapInternalLinksWithAnchors(content: string) {
+  const matches = Array.from(content.matchAll(URL_REGEX)).map((match) => {
+    return {
+      match: match[0],
+      start: match.index as number,
+      end: (match.index as number) + match[0].length,
+    };
+  });
+
+  const chunks = content.split('');
+  const vnodes: VNode[] = [];
+
+  let lastEnd = 0;
+
+  chunks.forEach((char, index) => {
+    if (index >= lastEnd) {
+      const match = matches.find((match) => match.start === index);
+
+      if (match) {
+        vnodes.push(
+          h(
+            ElLink,
+            {
+              type: 'primary',
+              class: 'font-normal',
+              href: match.match,
+              target: '_blank',
+              underline: false,
+              rel: 'noopener noreferrer',
+            },
+            () => match.match,
+          ),
+        );
+
+        lastEnd = match.end;
+      } else {
+        const lastText = vnodes.at(-1);
+
+        if (lastText !== undefined && lastText.type === Text) {
+          vnodes.splice(-1, 1, h(Text, (lastText.children as string) + char));
+        } else {
+          vnodes.push(h(Text, char));
+        }
+      }
+    }
+  });
+
+  return vnodes;
+}
+
+const ChatMessageWithLink = defineComponent(
+  () => {
+    return () => {
+      if (isImage) return null;
+
+      return h('span', {}, wrapInternalLinksWithAnchors(props.message.content));
+    };
+  },
+  {
+    name: 'ChatMessageWithLink',
+    inheritAttrs: false,
+  },
+);
 </script>
 <template>
   <div
@@ -29,7 +97,7 @@ const isImage = isBase64UrlImage(props.message.content);
   >
     <div
       :class="[
-        'flex items-start max-w-[80%] gap-2 bg-gray-100 rounded w-max hover:bg-gray-200 p-2',
+        'flex items-start max-w-[80%] gap-2 bg-gray-100 rounded w-max p-2',
         {
           'flex-row-reverse justify-end': isOwner,
         },
@@ -55,7 +123,7 @@ const isImage = isBase64UrlImage(props.message.content);
           />
 
           <template v-else>
-            {{ message.content }}
+            <chat-message-with-link />
           </template>
         </div>
 
