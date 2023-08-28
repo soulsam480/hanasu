@@ -51,7 +51,7 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   conn.value.on('reconnect_attempt', () => {
     state.value = 'reconnecting';
 
-    ElNotification.success({
+    ElNotification.warning({
       message: 'Server connection lost, trying to reconnect...',
     });
   });

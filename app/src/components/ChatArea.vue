@@ -4,14 +4,19 @@ import {
   ElAvatar,
   ElBadge,
   ElButton,
+  ElImage,
   ElInput,
+  ElPopover,
   ElScrollbar,
 } from 'element-plus';
 import { computed, ref, watch } from 'vue';
+import PhImageSquareDuotone from '~icons/ph/image-square-duotone';
 import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
+import { useImageAsset } from '../composables/useImageAsset';
 import { IMessage, appSettings, appState, localUserId } from '../store/app';
 import { dateFormat } from '../utils/date';
+import ChatMessage from './ChatMessage.vue';
 
 const emit = defineEmits<{
   (e: 'send-message', message: IMessage): void;
@@ -29,6 +34,9 @@ function playChatSound() {
     play({ forceSoundEnabled: true });
   }
 }
+
+const { open, imageAsFileURL, reset, imageFile, toBase64Image } =
+  useImageAsset();
 
 const chatState = computed(() => appState.chatState);
 const chatUser = computed(() => appState.chatUser);
@@ -63,26 +71,33 @@ const isChatDisabled = computed(
 
 const chatInput = ref<typeof ElInput | null>(null);
 
-function handleSendMessage() {
+async function handleSendMessage() {
   if (
     isChatDisabled.value ||
     localUserId.value === null ||
-    message.value.length === 0
+    (message.value.length === 0 && imageFile.value === null)
   )
     return;
 
   const payload: IMessage = {
-    content: message.value,
+    content:
+      imageFile.value !== null
+        ? await toBase64Image(imageFile.value)
+        : message.value,
     owner: localUserId.value.id,
     timestamp: Date.now(),
   };
 
   appState.messages.push(payload);
-
   emit('send-message', payload);
 
+  reset();
   message.value = '';
   chatInput.value?.focus();
+}
+
+function handleAssetClick() {
+  open();
 }
 </script>
 <template>
@@ -127,7 +142,7 @@ function handleSendMessage() {
     <el-scrollbar
       v-if="chatState === 'connected'"
       class="p-1"
-      view-class="flex flex-col gap-2 mt-auto"
+      view-class="flex flex-col gap-2 justify-end h-full"
       ref="chatContainer"
     >
       <div
@@ -159,9 +174,13 @@ function handleSendMessage() {
               {{ message.owner === localUserId?.id ? 'me' : chatUser?.name }}
             </div>
 
-            <div class="text-sm">
-              {{ message.content }}
-            </div>
+            <suspense>
+              <chat-message :message="message.content" />
+
+              <template #fallback>
+                <i-ph-spiral-duotone class="animate-spin" />
+              </template>
+            </suspense>
 
             <div class="text-[10px] text-gray-400">
               {{ dateFormat(new Date(message.timestamp), 'hh:mm aaa') }}
@@ -215,7 +234,7 @@ function handleSendMessage() {
       </div>
     </div>
 
-    <div class="flex items-center gap-0.5 p-1 flex-shrink-0">
+    <div class="flex items-center gap-1 p-1 flex-shrink-0">
       <el-input
         ref="chatInput"
         v-model="message"
@@ -224,15 +243,66 @@ function handleSendMessage() {
           isChatDisabled ? 'Connect with someone to continue' : 'Message'
         "
         name="message"
-        :disabled="isChatDisabled"
+        :disabled="isChatDisabled || imageAsFileURL !== null"
         @keydown.enter="handleSendMessage"
       />
 
+      <el-popover
+        :visible="imageAsFileURL !== null"
+        placement="top"
+        :width="250"
+      >
+        <div class="flex flex-col gap-3">
+          <el-image
+            v-if="imageAsFileURL !== null"
+            style="width: 226px; height: 226px"
+            :src="imageAsFileURL"
+            fit="cover"
+          />
+
+          <div class="flex items-center gap-2 justify-end">
+            <el-button
+              class="!ml-0"
+              type="danger"
+              plain
+              size="small"
+              :icon="PhClose"
+              @click="reset"
+              >Cancel</el-button
+            >
+
+            <el-button
+              class="!ml-0"
+              type="primary"
+              plain
+              size="small"
+              @click="handleSendMessage"
+              :icon="PhPaperPlaneTilt"
+              >Send</el-button
+            >
+          </div>
+        </div>
+
+        <template #reference>
+          <el-button
+            :icon="PhImageSquareDuotone"
+            @click="handleAssetClick"
+            type="primary"
+            plain
+            circle
+            :disabled="isChatDisabled || imageAsFileURL !== null"
+          />
+        </template>
+      </el-popover>
+
       <el-button
+        class="!ml-0"
         type="primary"
         plain
         circle
-        :disabled="isChatDisabled || message.length === 0"
+        :disabled="
+          isChatDisabled || message.length === 0 || imageAsFileURL !== null
+        "
         @click="handleSendMessage"
         :icon="PhPaperPlaneTilt"
       />

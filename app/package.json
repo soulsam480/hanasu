@@ -14,6 +14,7 @@
     "@types/uuid": "^9.0.2",
     "@vueuse/core": "^10.3.0",
     "@vueuse/sound": "^2.0.1",
+    "browser-image-compression": "^2.0.2",
     "element-plus": "^2.3.9",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.7.2",

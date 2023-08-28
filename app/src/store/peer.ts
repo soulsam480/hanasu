@@ -19,6 +19,11 @@ const RTC_CONFIG = {
       credential: 'openrelayproject',
     },
     {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
       urls: ['turn:13.250.13.83:3478?transport=udp'],
       username: 'YzYNCouZM1mhqhmseWk6',
       credential: 'YzYNCouZM1mhqhmseWk6',
