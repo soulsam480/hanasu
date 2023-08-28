@@ -30,7 +30,7 @@ export function useImageAsset() {
     const file = files?.[0];
 
     if (file === undefined || file.size > MAX_FILE_SELECT_SIZE) {
-      resetFileState();
+      reset();
 
       ElNotification.error({
         icon: PhSkull,
@@ -52,7 +52,7 @@ export function useImageAsset() {
     // check for file size after compression too
     // in modern browsers, around 256 KB in total is the size limit
     if (compressedFile.size > 192421) {
-      resetFileState();
+      reset();
 
       ElNotification.error({
         icon: PhSkull,
