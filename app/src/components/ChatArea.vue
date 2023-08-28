@@ -7,7 +7,6 @@ import {
   ElImage,
   ElInput,
   ElPopover,
-  ElScrollbar,
 } from 'element-plus';
 import { computed, ref, watch } from 'vue';
 import PhImageSquareDuotone from '~icons/ph/image-square-duotone';
@@ -43,18 +42,22 @@ const chatUser = computed(() => appState.chatUser);
 const userRole = computed(() => appState.userRole);
 
 const message = ref('');
-const chatContainer = ref<InstanceType<typeof ElScrollbar> | null>(null);
 
 function handleMessageChange(value: IMessage[]) {
   if (value.length === 0) return;
 
   playChatSound();
 
-  const scrollHeight = chatContainer.value?.wrapRef?.scrollHeight;
+  // account for suspense
+  window.setTimeout(() => {
+    const chatContainer = document.querySelector<HTMLElement>(
+      '#hanasu-chat-messages',
+    );
 
-  if (chatContainer === null || scrollHeight === undefined) return;
+    if (chatContainer === null) return;
 
-  chatContainer.value?.setScrollTop(scrollHeight);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }, 100);
 }
 
 watch(() => appState.messages, handleMessageChange, {
@@ -139,11 +142,10 @@ function handleAssetClick() {
       </el-badge>
     </div>
 
-    <el-scrollbar
+    <div
       v-if="chatState === 'connected'"
-      class="p-1"
-      view-class="flex flex-col gap-2 justify-end h-full"
-      ref="chatContainer"
+      class="p-1 overflow-scroll flex flex-col gap-2 mt-auto"
+      id="hanasu-chat-messages"
     >
       <div
         :key="message.timestamp"
@@ -188,7 +190,7 @@ function handleAssetClick() {
           </div>
         </div>
       </div>
-    </el-scrollbar>
+    </div>
 
     <div v-else class="h-full flex items-center justify-center">
       <div

@@ -156,6 +156,7 @@ export function usePeer() {
       initiator: true,
       trickle: false,
       config: RTC_CONFIG,
+
       // stream: stream.value as MediaStream,
     });
 

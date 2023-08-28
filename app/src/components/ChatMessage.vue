@@ -30,9 +30,9 @@ const isImage = await isBase64UrlImage(props.message);
   <div class="text-sm">
     <el-image
       v-if="isImage"
-      style="width: 226px; height: 226px"
+      style="max-width: 226px; max-height;: 226px"
       :src="message"
-      fit="cover"
+      fit="contain"
     />
 
     <template v-else>

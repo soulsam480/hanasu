@@ -41,7 +41,7 @@ export function useImageAsset() {
 
     const compressedFile = await imageCompression(file, {
       useWebWorker: true,
-      maxSizeMB: 1,
+      maxSizeMB: 0.065535,
     });
 
     imageFile.value = compressedFile;
