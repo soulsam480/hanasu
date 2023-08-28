@@ -14,7 +14,6 @@ import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { useImageAsset } from '../composables/useImageAsset';
 import { IMessage, appSettings, appState, localUserId } from '../store/app';
-import { dateFormat } from '../utils/date';
 import ChatMessage from './ChatMessage.vue';
 
 const emit = defineEmits<{
@@ -34,7 +33,7 @@ function playChatSound() {
   }
 }
 
-const { open, imageAsFileURL, reset, imageFile, toBase64Image } =
+const { open, imageAsFileURL, reset, imageFile, toBase64Image, isLoading } =
   useImageAsset();
 
 const chatState = computed(() => appState.chatState);
@@ -147,49 +146,14 @@ function handleAssetClick() {
       class="p-1 overflow-scroll flex flex-col gap-2 mt-auto"
       id="hanasu-chat-messages"
     >
-      <div
+      <chat-message
         :key="message.timestamp"
         v-for="message in appState.messages"
-        :class="[
-          'flex',
-          {
-            'justify-end': message.owner === localUserId?.id,
-          },
-        ]"
-      >
-        <div
-          :class="[
-            'flex items-start max-w-[80%] gap-2 bg-gray-100 rounded w-max hover:bg-gray-200 p-2',
-            {
-              'flex-row-reverse justify-end': message.owner === localUserId?.id,
-            },
-          ]"
-        >
-          <el-avatar
-            class="flex-shrink-0"
-            size="small"
-            :src="`https://source.boringavatars.com/pixel/120/${message.owner}?colors=264653,f4a261,e76f51`"
-          />
-
-          <div class="flex flex-col">
-            <div class="text-xs text-gray-500">
-              {{ message.owner === localUserId?.id ? 'me' : chatUser?.name }}
-            </div>
-
-            <suspense>
-              <chat-message :message="message.content" />
-
-              <template #fallback>
-                <i-ph-spiral-duotone class="animate-spin" />
-              </template>
-            </suspense>
-
-            <div class="text-[10px] text-gray-400">
-              {{ dateFormat(new Date(message.timestamp), 'hh:mm aaa') }}
-            </div>
-          </div>
-        </div>
-      </div>
+        :message="message"
+        :is-owner="message.owner === localUserId?.id"
+        :chat-user-name="chatUser?.name ?? ''"
+        v-memo="[message.timestamp, message.owner === localUserId?.id]"
+      />
     </div>
 
     <div v-else class="h-full flex items-center justify-center">
@@ -280,6 +244,7 @@ function handleAssetClick() {
               size="small"
               @click="handleSendMessage"
               :icon="PhPaperPlaneTilt"
+              :loading="isLoading"
               >Send</el-button
             >
           </div>
@@ -293,6 +258,7 @@ function handleAssetClick() {
             plain
             circle
             :disabled="isChatDisabled || imageAsFileURL !== null"
+            :loading="isLoading"
           />
         </template>
       </el-popover>
