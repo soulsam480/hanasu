@@ -44,6 +44,7 @@ const {
   imageFile,
   toBase64Image,
   isLoading: isProcessingImage,
+  loadFile,
 } = useImageAsset();
 
 const { setMuted } = usePeer();
@@ -114,6 +115,24 @@ async function handleSendMessage() {
   reset();
   message.value = '';
   chatInput.value?.focus();
+}
+
+function handlePaste(event: ClipboardEvent) {
+  if (isChatDisabled.value || imageAsFileURL.value !== null) return;
+
+  const items = event.clipboardData?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        event.preventDefault();
+        loadFile(file);
+      }
+      return;
+    }
+  }
 }
 
 function handleAssetClick() {
@@ -293,7 +312,7 @@ function toggleMute() {
       </div>
     </div>
 
-    <div class="flex items-center gap-1 p-1 flex-shrink-0">
+    <div class="flex items-center gap-1 p-1 flex-shrink-0" @paste="handlePaste">
       <el-input
         ref="chatInput"
         v-model="message"
