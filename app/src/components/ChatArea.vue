@@ -118,7 +118,7 @@ async function handleSendMessage() {
 }
 
 function handlePaste(event: ClipboardEvent) {
-  if (isChatDisabled.value || imageAsFileURL.value !== null) return;
+  if (isChatDisabled.value || imageAsFileURL.value !== null || isProcessingImage.value) return;
 
   const items = event.clipboardData?.items;
   if (!items) return;

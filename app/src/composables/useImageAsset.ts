@@ -4,7 +4,7 @@ import { ElNotification } from 'element-plus';
 import { computed, ref } from 'vue';
 import PhSkull from '~icons/ph/skull-duotone';
 
-const MAX_FILE_SELECT_SIZE = 3 * 1024 * 1024; // 1MB
+const MAX_FILE_SELECT_SIZE = 3 * 1024 * 1024; // 3MB
 
 export function useImageAsset() {
   const {
