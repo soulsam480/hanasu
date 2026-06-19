@@ -89,6 +89,48 @@ export function useImageAsset() {
     return compressedFile;
   }
 
+  async function loadFile(file: File) {
+    if (file.size > MAX_FILE_SELECT_SIZE) {
+      reset();
+      ElNotification.error({
+        icon: PhSkull,
+        message: 'Image size should be less than 3 MB',
+      });
+      return;
+    }
+
+    isLoading.value = true;
+
+    let compressedFile: File;
+    try {
+      compressedFile = await imageCompression(file, {
+        useWebWorker: true,
+        maxSizeMB: 0.065535,
+        fileType: 'image/jpeg',
+      });
+    } catch {
+      isLoading.value = false;
+      ElNotification.error({
+        icon: PhSkull,
+        message: 'Failed to process image, please try another one',
+      });
+      return;
+    }
+
+    if (compressedFile.size > 192421) {
+      reset();
+      ElNotification.error({
+        icon: PhSkull,
+        message:
+          'Image is too large even after compression, please choose smaller image!',
+      });
+      return;
+    }
+
+    imageFile.value = compressedFile;
+    isLoading.value = false;
+  }
+
   onChange(handleChange);
 
   function reset() {
@@ -137,5 +179,6 @@ export function useImageAsset() {
     reset,
     toBase64Image,
     isLoading,
+    loadFile,
   };
 }
