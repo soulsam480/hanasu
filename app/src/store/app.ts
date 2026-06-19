@@ -4,8 +4,8 @@ import type Peer from 'simple-peer';
 import { reactive } from 'vue';
 
 const SERIALIZER = {
-  read: (v: string) => window.JSON.parse(window.atob(v)),
-  write: (v: any) => window.btoa(window.JSON.stringify(v)),
+  read: (v: string) => JSON.parse(decodeURIComponent(atob(v))),
+  write: (v: any) => btoa(encodeURIComponent(JSON.stringify(v))),
 };
 
 export const localUserId = useStorage<Omit<IUser, 'connectedAt'> | null>(
@@ -56,6 +56,10 @@ interface IAppState {
   isDrawerOpen: boolean;
   isSettingsDrawerOpen: boolean;
   userRole: TChatUserRole | null;
+  isMuted: boolean;
+  remoteStream: MediaStream | null;
+  localStream: MediaStream | null;
+  micDenied: boolean;
 }
 
 export const appState = reactive<IAppState>({
@@ -68,9 +72,16 @@ export const appState = reactive<IAppState>({
   isSettingsDrawerOpen: false,
   outgoingCall: null,
   userRole: null,
+  isMuted: true,
+  remoteStream: null,
+  localStream: null,
+  micDenied: false,
 });
 
 export function resetApp() {
+  appState.remoteStream?.getTracks().forEach((t) => t.stop());
+  appState.localStream?.getTracks().forEach((t) => t.stop());
+
   appState.peer?.destroy();
   appState.peer = null;
   appState.chatState = 'disconnected';
@@ -79,4 +90,8 @@ export function resetApp() {
   appState.chatUser = null;
   appState.userRole = null;
   appState.messages = [];
+  appState.isMuted = true;
+  appState.remoteStream = null;
+  appState.localStream = null;
+  appState.micDenied = false;
 }

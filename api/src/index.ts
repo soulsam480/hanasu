@@ -57,10 +57,25 @@ class Hanasu {
         ? new URL(socket.request.url, 'http://localhost:8080')
         : null;
 
-    const name = url?.searchParams.get('name') ?? null;
+    const name = url?.searchParams.get('name')?.trim() ?? null;
     const localId = url?.searchParams.get('id') ?? null;
 
-    if (name === null || localId === null) return;
+    if (
+      name === null ||
+      name.length === 0 ||
+      name.length > 50 ||
+      localId === null
+    ) {
+      socket.disconnect();
+      return;
+    }
+
+    const existingClient = this.#getClientWithLocalId(localId);
+
+    if (existingClient !== undefined) {
+      const oldSocket = this.wss.sockets.sockets.get(existingClient.socketId);
+      oldSocket?.disconnect();
+    }
 
     const user: IHanasuUser = {
       socketId: socket.id,
@@ -125,6 +140,8 @@ class Hanasu {
     this.clients = this.clients.filter(
       (el) => el.socketId !== currentUser.socketId,
     );
+
+    this.blockedClients.delete(currentUser.localId);
 
     socket.broadcast.emit(
       HANASU_EVENTS.USER_DISCONNECTED,
@@ -276,11 +293,12 @@ class Hanasu {
 }
 
 process.on('uncaughtException', (e) => {
-  console.log(e);
+  console.error('[HANASU FATAL]:', e);
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (e) => {
-  console.log(e);
+  console.error('[HANASU UNHANDLED REJECTION]:', e);
 });
 
 const hanasu = new Hanasu();

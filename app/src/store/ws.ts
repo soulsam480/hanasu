@@ -36,7 +36,7 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   const SERVER_URL =
     import.meta.env.VITE_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-  conn.value = io(SERVER_URL + `?name=${name}&id=${id}`, {
+  conn.value = io(SERVER_URL + `?name=${encodeURIComponent(name)}&id=${encodeURIComponent(id)}`, {
     transports: ['websocket'],
   });
 
@@ -103,20 +103,10 @@ export function createConnection({ name, id }: Omit<IUser, 'connectedAt'>) {
   });
 
   conn.value.on(HANASU_EVENTS.CALL_MADE, (data: ICallMadeParams) => {
-    const { incomingCall, outgoingCall, chatState } = appState;
+    const { chatState } = appState;
 
-    // handle user busy state
-    // at one point, we can only have one call
-
-    // if the incoming call is from the same user as outgoing call
-    // then we need to reject the incoming call
-    if (
-      (incomingCall !== null &&
-        outgoingCall !== null &&
-        incomingCall.user.id === outgoingCall.to) ||
-      incomingCall !== null ||
-      chatState === 'connected'
-    ) {
+    // reject incoming calls when already in any active call state
+    if (chatState !== 'disconnected') {
       wsState.conn?.emit(HANASU_EVENTS.BUSY, {
         to: data.user.id,
       });

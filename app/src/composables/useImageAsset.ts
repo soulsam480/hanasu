@@ -20,10 +20,17 @@ export function useImageAsset() {
   const imageFile = ref<File | null>(null);
   const isLoading = ref(false);
 
+  let lastObjectURL: string | null = null;
+
   const imageAsFileURL = computed(() => {
     if (imageFile.value === null) return null;
 
-    return URL.createObjectURL(imageFile.value);
+    if (lastObjectURL !== null) {
+      URL.revokeObjectURL(lastObjectURL);
+    }
+
+    lastObjectURL = URL.createObjectURL(imageFile.value);
+    return lastObjectURL;
   });
 
   async function handleChange(files: FileList | null) {
@@ -42,12 +49,24 @@ export function useImageAsset() {
 
     isLoading.value = true;
 
-    const compressedFile = await imageCompression(file, {
-      useWebWorker: true,
-      // 16 KB
-      maxSizeMB: 0.065535,
-      fileType: 'image/jpeg',
-    });
+    let compressedFile: File;
+
+    try {
+      compressedFile = await imageCompression(file, {
+        useWebWorker: true,
+        maxSizeMB: 0.065535,
+        fileType: 'image/jpeg',
+      });
+    } catch {
+      isLoading.value = false;
+
+      ElNotification.error({
+        icon: PhSkull,
+        message: 'Failed to process image, please try another one',
+      });
+
+      return;
+    }
 
     // check for file size after compression too
     // in modern browsers, around 256 KB in total is the size limit
@@ -75,8 +94,9 @@ export function useImageAsset() {
   function reset() {
     resetFileState();
 
-    if (imageAsFileURL.value !== null) {
-      URL.revokeObjectURL(imageAsFileURL.value);
+    if (lastObjectURL !== null) {
+      URL.revokeObjectURL(lastObjectURL);
+      lastObjectURL = null;
     }
 
     imageFile.value = null;
@@ -95,6 +115,9 @@ export function useImageAsset() {
         if (dataURL) {
           isLoading.value = false;
           resolve(dataURL.toString());
+        } else {
+          isLoading.value = false;
+          reject(new Error('FileReader returned no result'));
         }
       };
 

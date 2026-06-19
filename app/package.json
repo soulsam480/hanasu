@@ -39,6 +39,6 @@
     "unplugin-vue-components": "^0.25.1",
     "vite": "^4.4.5",
     "vite-compatible-readable-stream": "^3.6.1",
-    "vue-tsc": "^1.8.5"
+    "vue-tsc": "^2.2.12"
   }
 }

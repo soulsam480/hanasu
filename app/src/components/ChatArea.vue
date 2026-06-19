@@ -8,12 +8,14 @@ import {
   ElInput,
   ElPopover,
 } from 'element-plus';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, watchEffect } from 'vue';
 import PhImageSquareDuotone from '~icons/ph/image-square-duotone';
 import PhLinkSimpleDuotone from '~icons/ph/link-simple-duotone';
 import PhPaperPlaneTilt from '~icons/ph/paper-plane-tilt-duotone';
+import PhMicrophone from '~icons/ph/microphone-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { useImageAsset } from '../composables/useImageAsset';
+import { usePeer } from '../store/peer';
 import { IMessage, appSettings, appState, localUserId } from '../store/app';
 import ChatMessage from './ChatMessage.vue';
 
@@ -42,6 +44,8 @@ const {
   toBase64Image,
   isLoading: isProcessingImage,
 } = useImageAsset();
+
+const { setMuted } = usePeer();
 
 const chatState = computed(() => appState.chatState);
 const chatUser = computed(() => appState.chatUser);
@@ -108,9 +112,30 @@ async function handleSendMessage() {
 function handleAssetClick() {
   open();
 }
+
+const remoteAudio = ref<HTMLAudioElement | null>(null);
+
+const isMuted = computed(() => appState.isMuted);
+const micDenied = computed(() => appState.micDenied);
+
+watchEffect(() => {
+  if (remoteAudio.value !== null && appState.remoteStream !== null) {
+    remoteAudio.value.srcObject = appState.remoteStream;
+  }
+});
+
+function handlePTTStart() {
+  if (isChatDisabled.value || micDenied.value) return;
+  setMuted(false);
+}
+
+function handlePTTEnd() {
+  setMuted(true);
+}
 </script>
 <template>
   <div class="relative h-full flex flex-col max-h-full">
+    <audio ref="remoteAudio" autoplay class="hidden" />
     <div
       v-if="chatUser !== null"
       class="p-2 bg-gray-200 rounded-b-md md:hidden"
@@ -134,6 +159,18 @@ function handleAssetClick() {
         <div class="text-sm">
           {{ chatUser.name }}
         </div>
+
+        <span
+          v-if="!isMuted && chatState === 'connected'"
+          class="relative flex h-2 w-2"
+        >
+          <span
+            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+          />
+          <span
+            class="relative inline-flex rounded-full h-2 w-2 bg-green-400"
+          />
+        </span>
 
         <el-button
           v-if="chatState === 'connected'"
@@ -292,6 +329,26 @@ function handleAssetClick() {
           />
         </template>
       </el-popover>
+
+      <el-button
+        class="!ml-0"
+        type="primary"
+        plain
+        circle
+        :disabled="isChatDisabled || micDenied"
+        :icon="PhMicrophone"
+        @pointerdown.prevent="handlePTTStart"
+        @pointerup.prevent="handlePTTEnd"
+        @pointerleave="handlePTTEnd"
+        :class="{ 'ring-2 ring-green-400': !isMuted && !isChatDisabled }"
+      />
+
+      <span
+        v-if="micDenied && !isChatDisabled"
+        class="text-xs text-gray-400 hidden md:inline"
+      >
+        Mic denied
+      </span>
 
       <el-button
         class="!ml-0"

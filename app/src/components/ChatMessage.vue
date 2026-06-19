@@ -5,7 +5,7 @@ import { IMessage } from '../store/app';
 import { dateFormat } from '../utils/date';
 
 const BASE64_REGEX =
-  /data:image\/[bmp,gif,ico,jpg,png,svg,webp,x\-icon,svg+xml]+;base64,[a-zA-Z0-9,+,/]+={0,2}/gm;
+  /data:image\/(bmp|gif|ico|jpg|jpeg|png|svg|webp|x-icon);base64,[A-Za-z0-9+/]+= {0,2}/gm;
 
 const URL_REGEX =
   /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
@@ -23,51 +23,41 @@ function isBase64UrlImage(base64String: string) {
 const isImage = isBase64UrlImage(props.message.content);
 
 function wrapInternalLinksWithAnchors(content: string) {
-  const matches = Array.from(content.matchAll(URL_REGEX)).map((match) => {
-    return {
-      match: match[0],
-      start: match.index as number,
-      end: (match.index as number) + match[0].length,
-    };
-  });
+  const matches = Array.from(content.matchAll(URL_REGEX)).map((match) => ({
+    match: match[0],
+    start: match.index as number,
+    end: (match.index as number) + match[0].length,
+  }));
 
-  const chunks = content.split('');
   const vnodes: VNode[] = [];
-
   let lastEnd = 0;
 
-  chunks.forEach((char, index) => {
-    if (index >= lastEnd) {
-      const match = matches.find((match) => match.start === index);
-
-      if (match) {
-        vnodes.push(
-          h(
-            ElLink,
-            {
-              type: 'primary',
-              class: 'font-normal',
-              href: match.match,
-              target: '_blank',
-              underline: false,
-              rel: 'noopener noreferrer',
-            },
-            () => match.match,
-          ),
-        );
-
-        lastEnd = match.end;
-      } else {
-        const lastText = vnodes.at(-1);
-
-        if (lastText !== undefined && lastText.type === Text) {
-          vnodes.splice(-1, 1, h(Text, (lastText.children as string) + char));
-        } else {
-          vnodes.push(h(Text, char));
-        }
-      }
+  for (const m of matches) {
+    if (m.start > lastEnd) {
+      vnodes.push(h(Text, content.slice(lastEnd, m.start)));
     }
-  });
+
+    vnodes.push(
+      h(
+        ElLink,
+        {
+          type: 'primary',
+          class: 'font-normal',
+          href: m.match,
+          target: '_blank',
+          underline: false,
+          rel: 'noopener noreferrer',
+        },
+        () => m.match,
+      ),
+    );
+
+    lastEnd = m.end;
+  }
+
+  if (lastEnd < content.length) {
+    vnodes.push(h(Text, content.slice(lastEnd)));
+  }
 
   return vnodes;
 }
@@ -117,7 +107,7 @@ const ChatMessageWithLink = defineComponent(
         <div class="text-sm">
           <el-image
             v-if="isImage"
-            style="max-width: 226px; max-height;: 226px"
+            style="max-width: 226px; max-height: 226px"
             :src="message.content"
             fit="contain"
           />

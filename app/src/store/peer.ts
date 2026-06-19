@@ -25,61 +25,10 @@ const RTC_CONFIG = {
       credential: 'openrelayproject',
     },
     {
-      urls: ['turn:13.250.13.83:3478?transport=udp'],
-      username: 'YzYNCouZM1mhqhmseWk6',
-      credential: 'YzYNCouZM1mhqhmseWk6',
-    },
-    {
-      urls: ['turn:relay.backups.cz'],
-      credential: 'webrtc',
-      username: 'webrtc',
-    },
-    {
-      urls: ['turn:relay.backups.cz?transport=tcp'],
-      credential: 'webrtc',
-      username: 'webrtc',
-    },
-    {
-      urls: ['turn:numb.viagenie.ca'],
-      credential: 'muazkh',
-      username: 'webrtc@live.com',
-    },
-    {
-      urls: ['turn:192.158.29.39:3478?transport=udp'],
-      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-      username: '28224511:1379330808',
-    },
-    {
-      urls: ['turn:192.158.29.39:3478?transport=tcp'],
-      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-      username: '28224511:1379330808',
-    },
-    {
-      urls: ['turn:turn.bistri.com:80'],
-      credential: 'homeo',
-      username: 'homeo',
-    },
-    {
-      urls: ['turn:turn.anyfirewall.com:443?transport=tcp'],
-      credential: 'webrtc',
-      username: 'webrtc',
-    },
-    {
       urls: [
         'stun:stun.l.google.com:19302',
         'stun:stun1.l.google.com:19302',
         'stun:stun2.l.google.com:19302',
-        'stun:stun3.l.google.com:19302',
-        'stun:stun4.l.google.com:19302',
-        'stun:stun.ekiga.net',
-        'stun:stun.ideasip.com',
-        'stun:stun.rixtelecom.se',
-        'stun:stun.schlund.de',
-        'stun:stun.stunprotocol.org:3478',
-        'stun:stun.voiparound.com',
-        'stun:stun.voipbuster.com',
-        'stun:stun.voipstunt.com',
-        'stun:stun.voxgratia.org',
       ],
     },
   ],
@@ -105,10 +54,6 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
   });
 
   peer.on('close', () => {
-    // killAudio();
-    // (stream.value as MediaStream).getAudioTracks()[0].enabled = false;
-    // isMuted.value = true;
-
     nextTick(() => {
       ElNotification({
         message: h(CallNotification, {
@@ -148,7 +93,7 @@ function setupCommonPeerEventListeners(peer: Peer.Instance) {
 
       ElNotification({
         message: h(CallNotification, {
-          message: err.name,
+          message: message,
           subMessage: err.message,
           type: 'rejected',
         }),
@@ -161,7 +106,19 @@ export function usePeer() {
   const { chatState, chatUser, peer, incomingCall, userRole } =
     toRefs(appState);
 
-  function makeCall(user: IUser) {
+  async function makeCall(user: IUser) {
+    let stream: MediaStream | null = null;
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      appState.localStream = stream;
+      appState.isMuted = true;
+      stream.getAudioTracks()[0].enabled = false;
+    } catch {
+      appState.micDenied = true;
+      console.warn('[HANASU] Mic access denied or unavailable, continuing with text only');
+    }
+
     ElNotification({
       message: h(CallNotification, {
         message: `Sending chat request to ${user.name}`,
@@ -177,8 +134,7 @@ export function usePeer() {
       initiator: true,
       trickle: false,
       config: RTC_CONFIG,
-
-      // stream: stream.value as MediaStream,
+      stream: stream ?? undefined,
     });
 
     setupCommonPeerEventListeners(peer.value);
@@ -206,25 +162,24 @@ export function usePeer() {
       });
     });
 
-    // peer.value?.on('stream', (stream) => {
-    //   const audio = document.querySelector('audio') as HTMLAudioElement;
-    //   audio.load();
-    //   if ('srcObject' in audio) {
-    //     audio.srcObject = stream;
-    //   } else {
-    //     (audio as any).src = window.URL.createObjectURL(stream); // for older browsers
-    //   }
-    //   const playPromise = audio.play();
-    //   if (playPromise !== undefined) {
-    //     playPromise.catch((error) => {
-    //       console.log(error);
-    //       audio.pause();
-    //     });
-    //   }
-    // });
+    peer.value?.on('stream', (remoteStream) => {
+      appState.remoteStream = remoteStream;
+    });
   }
 
-  function acceptCall(callPayload: ICallMadeParams) {
+  async function acceptCall(callPayload: ICallMadeParams) {
+    let stream: MediaStream | null = null;
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      appState.localStream = stream;
+      appState.isMuted = true;
+      stream.getAudioTracks()[0].enabled = false;
+    } catch {
+      appState.micDenied = true;
+      console.warn('[HANASU] Mic access denied or unavailable, continuing with text only');
+    }
+
     chatState.value = 'connecting';
     chatUser.value = callPayload.user;
     userRole.value = 'callee';
@@ -232,12 +187,10 @@ export function usePeer() {
     peer.value = new Peer({
       trickle: false,
       config: RTC_CONFIG,
-      // stream: stream.value as MediaStream,
+      stream: stream ?? undefined,
     });
 
     setupCommonPeerEventListeners(peer.value);
-
-    peer.value?.signal(callPayload.offer);
 
     peer.value?.on('signal', (data) => {
       if (data.type === 'renegotiate' || data.type === 'transceiverRequest') {
@@ -253,22 +206,11 @@ export function usePeer() {
       incomingCall.value = null;
     });
 
-    // peer.value?.on('stream', (stream) => {
-    //   const audio = document.querySelector('audio') as HTMLAudioElement;
-    //   audio.load();
-    //   if ('srcObject' in audio) {
-    //     audio.srcObject = stream;
-    //   } else {
-    //     (audio as any).src = window.URL.createObjectURL(stream); // for older browsers
-    //   }
-    //   const playPromise = audio.play();
-    //   if (playPromise !== undefined) {
-    //     playPromise.catch((error) => {
-    //       console.log(error);
-    //       audio.pause();
-    //     });
-    //   }
-    // });
+    peer.value?.signal(callPayload.offer);
+
+    peer.value?.on('stream', (remoteStream) => {
+      appState.remoteStream = remoteStream;
+    });
   }
 
   function rejectCall(callPaylaod: ICallMadeParams) {
@@ -305,7 +247,16 @@ export function usePeer() {
       to: chatUser.value?.id,
     });
 
-    peer.value?.destroy();
+    nextTick(() => {
+      resetApp();
+    });
+  }
+
+  function setMuted(muted: boolean) {
+    appState.isMuted = muted;
+    appState.localStream?.getAudioTracks().forEach((t) => {
+      t.enabled = !muted;
+    });
   }
 
   return {
@@ -318,5 +269,6 @@ export function usePeer() {
     sendMessage,
     cancelOutgoingCall,
     closeChat,
+    setMuted,
   };
 }

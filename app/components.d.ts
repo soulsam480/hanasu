@@ -12,7 +12,6 @@ declare module 'vue' {
     IPhChatTeardropDuotone: typeof import('~icons/ph/chat-teardrop-duotone')['default']
     IPhCheckCircleDuotone: typeof import('~icons/ph/check-circle-duotone')['default']
     IPhIdentificationCardDuotone: typeof import('~icons/ph/identification-card-duotone')['default']
-    IPhIdentificationCardThin: typeof import('~icons/ph/identification-card-thin')['default']
     IPhMicrophoneStageDuotone: typeof import('~icons/ph/microphone-stage-duotone')['default']
     IPhShareNetworkDuotone: typeof import('~icons/ph/share-network-duotone')['default']
     IPhSkullDuotone: typeof import('~icons/ph/skull-duotone')['default']
