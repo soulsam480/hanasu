@@ -33,70 +33,14 @@ export function useImageAsset() {
     return lastObjectURL;
   });
 
-  async function handleChange(files: FileList | null) {
-    const file = files?.[0];
-
-    if (file === undefined || file.size > MAX_FILE_SELECT_SIZE) {
-      reset();
-
-      ElNotification.error({
-        icon: PhSkull,
-        message: 'Image size should be less that 3 MB',
-      });
-
-      return;
-    }
-
-    isLoading.value = true;
-
-    let compressedFile: File;
-
-    try {
-      compressedFile = await imageCompression(file, {
-        useWebWorker: true,
-        maxSizeMB: 0.065535,
-        fileType: 'image/jpeg',
-      });
-    } catch {
-      isLoading.value = false;
-
-      ElNotification.error({
-        icon: PhSkull,
-        message: 'Failed to process image, please try another one',
-      });
-
-      return;
-    }
-
-    // check for file size after compression too
-    // in modern browsers, around 256 KB in total is the size limit
-    if (compressedFile.size > 192421) {
-      reset();
-
-      ElNotification.error({
-        icon: PhSkull,
-        message:
-          'Image is too large even after compression, please choose smaller image!',
-      });
-
-      return;
-    }
-
-    imageFile.value = compressedFile;
-
-    isLoading.value = false;
-
-    return compressedFile;
-  }
-
-  async function loadFile(file: File) {
+  async function compressAndValidate(file: File): Promise<File | null> {
     if (file.size > MAX_FILE_SELECT_SIZE) {
       reset();
       ElNotification.error({
         icon: PhSkull,
         message: 'Image size should be less than 3 MB',
       });
-      return;
+      return null;
     }
 
     isLoading.value = true;
@@ -114,7 +58,7 @@ export function useImageAsset() {
         icon: PhSkull,
         message: 'Failed to process image, please try another one',
       });
-      return;
+      return null;
     }
 
     if (compressedFile.size > 192421) {
@@ -124,9 +68,25 @@ export function useImageAsset() {
         message:
           'Image is too large even after compression, please choose smaller image!',
       });
-      return;
+      return null;
     }
 
+    return compressedFile;
+  }
+
+  async function handleChange(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return null;
+    const compressedFile = await compressAndValidate(file);
+    if (!compressedFile) return null;
+    imageFile.value = compressedFile;
+    isLoading.value = false;
+    return compressedFile;
+  }
+
+  async function loadFile(file: File) {
+    const compressedFile = await compressAndValidate(file);
+    if (!compressedFile) return;
     imageFile.value = compressedFile;
     isLoading.value = false;
   }
