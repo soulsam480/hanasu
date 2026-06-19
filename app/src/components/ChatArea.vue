@@ -16,6 +16,7 @@ import PhMicrophone from '~icons/ph/microphone-duotone';
 import PhClose from '~icons/ph/x-circle-duotone';
 import { useImageAsset } from '../composables/useImageAsset';
 import { usePeer } from '../store/peer';
+import { useAudioAnalyser } from '../composables/useAudioAnalyser';
 import { IMessage, appSettings, appState, localUserId } from '../store/app';
 import ChatMessage from './ChatMessage.vue';
 
@@ -46,6 +47,12 @@ const {
 } = useImageAsset();
 
 const { setMuted } = usePeer();
+const remoteStream = computed(() => appState.remoteStream);
+const { isSpeaking } = useAudioAnalyser(remoteStream);
+
+watchEffect(() => {
+  appState.isRemoteSpeaking = isSpeaking.value;
+});
 
 const chatState = computed(() => appState.chatState);
 const chatUser = computed(() => appState.chatUser);
@@ -124,13 +131,9 @@ watchEffect(() => {
   }
 });
 
-function handlePTTStart() {
+function toggleMute() {
   if (isChatDisabled.value || micDenied.value) return;
-  setMuted(false);
-}
-
-function handlePTTEnd() {
-  setMuted(true);
+  setMuted(!isMuted.value);
 }
 </script>
 <template>
@@ -161,7 +164,7 @@ function handlePTTEnd() {
         </div>
 
         <span
-          v-if="!isMuted && chatState === 'connected'"
+          v-if="isSpeaking && chatState === 'connected'"
           class="relative flex h-2 w-2"
         >
           <span
@@ -170,6 +173,29 @@ function handlePTTEnd() {
           <span
             class="relative inline-flex rounded-full h-2 w-2 bg-green-400"
           />
+        </span>
+
+        <span
+          v-if="!isMuted && chatState === 'connected'"
+          class="relative flex h-2 w-2"
+        >
+          <span
+            class="relative inline-flex rounded-full h-2 w-2 bg-blue-400"
+          />
+        </span>
+
+        <span
+          v-if="isSpeaking && chatState === 'connected'"
+          class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200"
+        >
+          <span class="flex gap-0.5 items-center h-4">
+            <span class="w-0.5 bg-green-500 rounded-full" style="animation: speakBar 0.5s ease-in-out infinite alternate; height: 8px;" />
+            <span class="w-0.5 bg-green-500 rounded-full" style="animation: speakBar 0.5s ease-in-out 0.1s infinite alternate; height: 14px;" />
+            <span class="w-0.5 bg-green-500 rounded-full" style="animation: speakBar 0.5s ease-in-out 0.2s infinite alternate; height: 6px;" />
+            <span class="w-0.5 bg-green-500 rounded-full" style="animation: speakBar 0.5s ease-in-out 0.15s infinite alternate; height: 12px;" />
+            <span class="w-0.5 bg-green-500 rounded-full" style="animation: speakBar 0.5s ease-in-out 0.05s infinite alternate; height: 10px;" />
+          </span>
+          <span class="text-xs text-green-600 font-medium">Speaking</span>
         </span>
 
         <el-button
@@ -337,9 +363,7 @@ function handlePTTEnd() {
         circle
         :disabled="isChatDisabled || micDenied"
         :icon="PhMicrophone"
-        @pointerdown.prevent="handlePTTStart"
-        @pointerup.prevent="handlePTTEnd"
-        @pointerleave="handlePTTEnd"
+        @click="toggleMute"
         :class="{ 'ring-2 ring-green-400': !isMuted && !isChatDisabled }"
       />
 
@@ -368,5 +392,10 @@ function handlePTTEnd() {
 <style>
 .hanasu-chat-input .el-input__wrapper {
   @apply rounded-full;
+}
+
+@keyframes speakBar {
+  from { height: 4px; }
+  to { height: 16px; }
 }
 </style>

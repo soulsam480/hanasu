@@ -60,6 +60,7 @@ interface IAppState {
   remoteStream: MediaStream | null;
   localStream: MediaStream | null;
   micDenied: boolean;
+  isRemoteSpeaking: boolean;
 }
 
 export const appState = reactive<IAppState>({
@@ -76,6 +77,7 @@ export const appState = reactive<IAppState>({
   remoteStream: null,
   localStream: null,
   micDenied: false,
+  isRemoteSpeaking: false,
 });
 
 export function resetApp() {
@@ -94,4 +96,5 @@ export function resetApp() {
   appState.remoteStream = null;
   appState.localStream = null;
   appState.micDenied = false;
+  appState.isRemoteSpeaking = false;
 }
