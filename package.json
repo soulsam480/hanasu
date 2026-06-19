@@ -1,21 +1,16 @@
 {
-  "name": "hanasu",
-  "version": "1.0.0",
-  "description": "",
-  "private": true,
-  "scripts": {
-    "app": "pnpm --filter @hanasu/app",
-    "api": "pnpm --filter @hanasu/api"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "typescript": "^5.0.2"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "@vueuse/sound@2.0.1": "patches/@vueuse__sound@2.0.1.patch"
-    }
-  }
+	"name": "hanasu",
+	"version": "1.0.0",
+	"description": "",
+	"private": true,
+	"scripts": {
+		"app": "pnpm --filter @hanasu/app",
+		"api": "pnpm --filter @hanasu/api"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"typescript": "^5.0.2"
+	}
 }

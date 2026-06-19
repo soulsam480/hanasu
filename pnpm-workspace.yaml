@@ -2,6 +2,7 @@ packages:
   - app
   - api
   - shared
+
 allowBuilds:
   '@parcel/watcher': true
   esbuild: true
